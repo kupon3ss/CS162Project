@@ -19,14 +19,12 @@
 
     <path id="classpath.base">
         <pathelement location="${build.src}"/>
+        <fileset dir="${lib}" includes="**/*.jar"/>
     </path>
 
     <path id="classpath.test">
         <path refid="classpath.base"/>
         <pathelement location="${build.test}"/>
-        <pathelement location="${lib}/junit-4.5.jar"/>
-        <pathelement location="${lib}/hamcrest-core-1.3.jar"/>
-        <pathelement location="${lib}/mockito-all-1.9.5.jar"/>
     </path>
 
     <!-- Common macro for compiling Java source -->
