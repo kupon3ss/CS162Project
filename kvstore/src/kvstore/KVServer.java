@@ -39,7 +39,26 @@ public class KVServer implements KeyValueInterface {
      */
     @Override
     public void put(String key, String value) throws KVException {
-        // implement me
+    	//Bulletproofing
+    	if (key == null || key.length() == 0) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} else if (key.length() >= MAX_KEY_SIZE) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} else if (value == null || value.length() == 0) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} else if (value.length() >= MAX_VAL_SIZE) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	}
+    	
+    	
+    	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
+    	lock.lock();
+    	try {
+    		dataCache.put(key, value); //Place <key, value> in KVCache
+    		dataStore.put(key, value); //Place <key, value> in KVStore
+    	} finally {
+    		lock.unlock(); //Release lock
+    	}
     }
 
     /**
@@ -52,8 +71,19 @@ public class KVServer implements KeyValueInterface {
      */
     @Override
     public String get(String key) throws KVException {
-        // implement me
-        return null;
+    	if (key == null || key.length() == 0) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} else if (key.length() >= MAX_KEY_SIZE) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	}
+    	
+    	if (dataCache.get(key) != null) {
+    		return dataCache.get(key);
+    	} else {
+    		String value = dataStore.get(key); //Possible exception here
+    		dataCache.put(key, value);
+    		return dataCache.get(key);
+    	}
     }
 
     /**
@@ -64,7 +94,21 @@ public class KVServer implements KeyValueInterface {
      */
     @Override
     public void del(String key) throws KVException {
-        // implement me
+    	//Bulletproofing
+    	if (key == null || key.length() == 0) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} else if (key.length() >= MAX_KEY_SIZE) {
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    	} 
+    	
+    	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
+    	lock.lock();
+    	try {
+    		dataCache.del(key); //Delete <key, value> in KVCache
+    		dataStore.del(key); //Delete <key, value> in KVStore
+    	} finally {
+    		lock.unlock(); //Release lock
+    	}
     }
 
     /**
@@ -76,8 +120,12 @@ public class KVServer implements KeyValueInterface {
      * @param key key to check for membership in store
      */
     public boolean hasKey(String key) {
-        // implement me
-        return false;
+        try {
+        	dataStore.get(key); //throws exception if DNE in store
+        	return true;
+        } catch (KVException e) {
+        	return false;
+        }
     }
 
     /** This method is purely for convenience and will not be tested. */
