@@ -24,8 +24,17 @@ public class KVCache implements KeyValueInterface {
      */
     public KVCache(int numSets, int maxElemsPerSet) {
     	for (int i = 0; i < numSets; i++) {
-    		
+    		cache.add(createSet(maxElemsPerSet));
     	}
+    }
+    
+    //Creates a set of null CacheEntries.
+    public LinkedList<CacheEntry> createSet(int numEntries) {
+    	LinkedList<CacheEntry> set = new LinkedList<CacheEntry>();
+    	for (int i = 0; i < numEntries; i++) {
+    		set.add(null);
+    	}
+    	return set;
     }
 
     /**
@@ -90,7 +99,7 @@ public class KVCache implements KeyValueInterface {
     		set.add(empty, new CacheEntry(key, value));
     	} else {
     		//Set must be full here
-    		for (int i = 0; i < set.size(); i++) {
+    		while (true) {
     			CacheEntry secondChance; 
     			if (set.getFirst().getRef()) {
     				//Gives second chance. Removes head and adds onto tail with ref bit false
@@ -101,6 +110,7 @@ public class KVCache implements KeyValueInterface {
     				//No second chance so remove head and adds new entry onto tail
     				set.remove();
     				set.addLast(new CacheEntry(key, value));
+    				break;
     			}
     		}
     	}
@@ -116,7 +126,6 @@ public class KVCache implements KeyValueInterface {
      */
     @Override
     public void del(String key) {
-        // implement me
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
     	for (int i = 0; i < set.size(); i++) {
     		if (set.get(i) != null) {
@@ -137,8 +146,6 @@ public class KVCache implements KeyValueInterface {
      * @return lock for the set that contains the key
      */
     public Lock getLock(String key) {
-        // implement me
-        //return null;
     	return locks[getSetId(key)];
     }
 
@@ -149,8 +156,7 @@ public class KVCache implements KeyValueInterface {
      * @return set of the key
      */
     private int getSetId(String key) {
-        // implement me
-        return 0;
+        return Math.abs(key.hashCode() % cache.size());
     }
 
     /**
@@ -164,14 +170,6 @@ public class KVCache implements KeyValueInterface {
     @Override
     public String toString() {
         return this.toXML();
-    }
-    
-    public LinkedList<CacheEntry> createSet(int numEntries) {
-    	LinkedList<CacheEntry> set = new LinkedList<CacheEntry>();
-    	for (int i = 0; i < numEntries; i++) {
-    		set.add(null);
-    	}
-    	return set;
     }
 
     private class CacheEntry {
