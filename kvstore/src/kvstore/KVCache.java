@@ -1,5 +1,7 @@
 package kvstore;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -10,6 +12,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * the eviction policy.
  */
 public class KVCache implements KeyValueInterface {
+	
+	ArrayList<LinkedList<CacheEntry>> cache;
+	ReentrantLock[] locks;
 
     /**
      * Constructs a second-chance-replacement cache.
@@ -18,7 +23,9 @@ public class KVCache implements KeyValueInterface {
      * @param maxElemsPerSet the size of each set
      */
     public KVCache(int numSets, int maxElemsPerSet) {
-        // implement me
+    	for (int i = 0; i < numSets; i++) {
+    		
+    	}
     }
 
     /**
@@ -32,8 +39,16 @@ public class KVCache implements KeyValueInterface {
      */
     @Override
     public String get(String key) {
-        // implement me
-        return null;
+    	LinkedList<CacheEntry> set = cache.get(getSetId(key));
+    	for (int i = 0; i < set.size(); i++) {
+    		if (set.get(i) != null) {
+    			if (set.get(i).getKey() == key) {
+    				set.get(i).setRefTrue();
+    				return set.get(i).getValue();
+    			}
+    		}
+    	}
+    	return null;
     }
 
     /**
@@ -54,7 +69,42 @@ public class KVCache implements KeyValueInterface {
      */
     @Override
     public void put(String key, String value) {
-        // implement me
+    	LinkedList<CacheEntry> set = cache.get(getSetId(key));
+    	int empty = -1;
+    	
+    	//Either retrieves the first null spot or replaces key, value pair
+    	for (int i = 0; i < set.size(); i++) {
+    		if (set.get(i) != null) {
+    			if (set.get(i).getKey() == key) {
+    				set.get(i).setValue(value);
+    				set.get(i).setRefTrue();
+    			}
+    		} else if(empty == -1) {
+    			empty = i;
+    		}
+    	}
+    	
+    	//Either puts key, value pair at null spot or uses second chance algorithm to replace element
+    	if (empty != -1) {
+    		set.remove(empty);
+    		set.add(empty, new CacheEntry(key, value));
+    	} else {
+    		//Set must be full here
+    		for (int i = 0; i < set.size(); i++) {
+    			CacheEntry secondChance; 
+    			if (set.getFirst().getRef()) {
+    				//Gives second chance. Removes head and adds onto tail with ref bit false
+    				secondChance = set.remove();
+    				secondChance.setRefFalse();
+    				set.addLast(secondChance);
+    			} else {
+    				//No second chance so remove head and adds new entry onto tail
+    				set.remove();
+    				set.addLast(new CacheEntry(key, value));
+    			}
+    		}
+    	}
+    	
     }
 
     /**
@@ -67,6 +117,15 @@ public class KVCache implements KeyValueInterface {
     @Override
     public void del(String key) {
         // implement me
+    	LinkedList<CacheEntry> set = cache.get(getSetId(key));
+    	for (int i = 0; i < set.size(); i++) {
+    		if (set.get(i) != null) {
+    			if (set.get(i).getKey() == key) {
+    				set.remove(i);
+    				set.add(null);
+    			}
+    		}
+    	}
     }
 
     /**
@@ -79,7 +138,8 @@ public class KVCache implements KeyValueInterface {
      */
     public Lock getLock(String key) {
         // implement me
-        return null;
+        //return null;
+    	return locks[getSetId(key)];
     }
 
     /**
@@ -105,5 +165,49 @@ public class KVCache implements KeyValueInterface {
     public String toString() {
         return this.toXML();
     }
+    
+    public LinkedList<CacheEntry> createSet(int numEntries) {
+    	LinkedList<CacheEntry> set = new LinkedList<CacheEntry>();
+    	for (int i = 0; i < numEntries; i++) {
+    		set.add(null);
+    	}
+    	return set;
+    }
 
+    private class CacheEntry {
+    	
+    	private String key, value;
+    	private boolean reference;
+    	
+    	public CacheEntry(String k, String v) {
+    		this.key = k;
+    		this.value = v;
+    		this.reference = false;
+    	}
+    	
+    	public void setRefTrue() {
+    		this.reference = true;
+    	}
+    	
+    	public void setRefFalse() {
+    		this.reference = false;
+    	}
+    	
+    	public String getValue() {
+    		return this.value;
+    	}
+    	
+    	public void setValue(String v) {
+    		this.value = v;
+    	}
+    	
+    	public String getKey() {
+    		return this.key;
+    	}
+    	
+    	public boolean getRef() {
+    		return this.reference;
+    	}
+    }
+    
 }
