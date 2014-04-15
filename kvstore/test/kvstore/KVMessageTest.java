@@ -9,7 +9,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.junit.*;
+import org.xml.sax.SAXException;
 public class KVMessageTest {
 
     private Socket sock;
@@ -17,7 +20,7 @@ public class KVMessageTest {
     private static final String TEST_INPUT_DIR = "test/kvstore/test-inputs/";
 
     @Test
-    public void successfullyParsesPutReq() throws KVException {
+    public void successfullyParsesPutReq() throws KVException, IOException, ParserConfigurationException, SAXException {
         setupSocket("putreq.txt");
         KVMessage kvm = new KVMessage(sock);
         assertNotNull(kvm);
@@ -28,7 +31,7 @@ public class KVMessageTest {
     }
 
     @Test
-    public void successfullyParsesPutResp() throws KVException {
+    public void successfullyParsesPutResp() throws KVException, IOException, ParserConfigurationException, SAXException {
         setupSocket("putresp.txt");
         KVMessage kvm = new KVMessage(sock);
         assertNotNull(kvm);
