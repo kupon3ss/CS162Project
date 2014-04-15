@@ -171,6 +171,29 @@ public class KVCache implements KeyValueInterface {
     public String toString() {
         return this.toXML();
     }
+    
+    /**
+     * 
+     * @author MichaelChuang
+     * Testing reference purposes. Get the reference bit of given key.
+     * Returns -1 if doesn't exist in set. Otherwise, returns 0 for false or 1 for true. 
+     */
+    public int getReference(String key) {
+    	LinkedList<CacheEntry> set = cache.get(getSetId(key));
+    	for (int i = 0; i < set.size(); i++) {
+    		if (set.get(i) != null) {
+    			if (set.get(i).getKey() == key) {
+    				set.get(i).setRefTrue();
+    				if (set.get(i).getRef()) {
+    					return 1;
+    				} else {
+    					return 0;
+    				}
+    			}
+    		}
+    	}
+    	return -1;
+    }
 
     private class CacheEntry {
     	

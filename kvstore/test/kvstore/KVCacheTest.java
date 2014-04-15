@@ -41,6 +41,28 @@ public class KVCacheTest {
     }
     
     /**
+     * Verify the cache can change reference bit correctly.
+     */
+    @Test
+    public void referenceTest() {
+    	KVCache cache = new KVCache(1, 4);
+    	
+    	//Get
+        cache.put("hello", "world");
+        assertEquals(0, cache.getReference("hello"));
+        assertEquals("world", cache.get("hello"));
+        assertEquals(1, cache.getReference("hello"));
+        
+        //Put and replace
+        assertEquals(-1, cache.getReference("hi"));
+        cache.put("hi", "friend");
+        assertEquals(0, cache.getReference("hi"));
+        cache.put("hi", "buddy");
+        assertEquals("buddy", cache.get("hi"));
+        assertEquals(1, cache.getReference("hi"));
+    }
+    
+    /**
      * Verify the cache implements second chance correctly.
      */
     @Test
@@ -54,11 +76,17 @@ public class KVCacheTest {
     	cache.get("2");
     	cache.get("4");
     	cache.put("5", "five");
+    	
     	assertEquals(null, cache.get("3"));
     	assertEquals("five", cache.get("5"));
     	assertEquals("one", cache.get("1"));
     	assertEquals("two", cache.get("2"));
     	assertEquals("four", cache.get("4"));
+    	
+    	assertEquals(0, cache.getReference("1"));
+    	assertEquals(0, cache.getReference("2"));
+    	assertEquals(0, cache.getReference("5"));
+    	assertEquals(1, cache.getReference("4"));
     }
     
 }
