@@ -29,7 +29,7 @@ public class KVClient implements KeyValueInterface {
      * @return Socket connected to server
      * @throws KVException if unable to make or connect socket
      */
-    private Socket connectHost() throws KVException {
+    protected Socket connectHost() throws KVException {
         // implement me
         return null;
     }
@@ -40,7 +40,7 @@ public class KVClient implements KeyValueInterface {
      *
      * @param  sock Socket to be closed
      */
-    private void closeHost(Socket sock) {
+    protected void closeHost(Socket sock) {
         // implement me
     }
 
