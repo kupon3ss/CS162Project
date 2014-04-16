@@ -176,15 +176,25 @@ public class KVCache implements KeyValueInterface {
     		
     		Element root = xmlDoc.createElement("KVCache");
     		for (int i = 0; i < cache.size(); i++) {
-    			Element set = xmlDoc.createElement("Set");
-    			set.setAttribute("Id", Integer.toString(i));
-    			for (int j = 0; j < cache.get(i).size(); j++) {
+    			Element setXML = xmlDoc.createElement("Set");
+    			setXML.setAttribute("Id", Integer.toString(i));
+    			
+    			LinkedList<CacheEntry> set = cache.get(i);
+    			for (int j = 0; j < set.size(); j++) {
     				Element entry = xmlDoc.createElement("CacheEntry");
-    				entry.setAttribute("isReferenced", String.valueOf(cache.get(i).get(j).getRef()));
+    				entry.setAttribute("isReferenced", String.valueOf(set.get(j).getRef()));
     				
-    				set.appendChild(entry);
+    				Element key = xmlDoc.createElement("Key");
+    				key.setNodeValue(set.get(j).getKey());
+    				Element value = xmlDoc.createElement("Value");
+    				value.setNodeValue(set.get(j).getValue());
+    				
+    				entry.appendChild(key);
+    				entry.appendChild(value);
+    				
+    				setXML.appendChild(entry);
     			}
-    			root.appendChild(set);
+    			root.appendChild(setXML);
     		}
     		return xmlDoc.getXmlEncoding();
     	} catch (ParserConfigurationException e) {
