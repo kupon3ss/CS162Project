@@ -1,10 +1,12 @@
 package kvstore;
 
 import static kvstore.KVConstants.*;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.io.*;
+
 import javax.xml.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -75,7 +77,7 @@ public class KVMessage implements Serializable {
      * @throws SAXException 
      * @throws ParserConfigurationException 
      */
-    public KVMessage(Socket sock) throws KVException, IOException, ParserConfigurationException, SAXException {
+    public KVMessage(Socket sock) throws KVException{
         this(sock, 0);
     }
 
@@ -92,24 +94,104 @@ public class KVMessage implements Serializable {
      * @throws ParserConfigurationException 
      * @throws SAXException 
      */
-    public KVMessage(Socket sock, int timeout) throws KVException, IOException, ParserConfigurationException, SAXException {
+    public KVMessage(Socket sock, int timeout) throws KVException {
         // implement me
-    	OpenStream = new NoCloseInputStream( sock.getInputStream() );
     	Document document = null;
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        document = builder.parse(OpenStream);
-    }
+    	try {
+	    	sock.setSoTimeout(timeout);
+	    	OpenStream = new NoCloseInputStream( sock.getInputStream() );
+	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder builder;
+			builder = factory.newDocumentBuilder();
+			document = builder.parse(OpenStream);			
+		} catch (SAXException e) {
+			throw new KVException("XML Parsing Error");
+		} catch (IOException e) {
+			throw new KVException("I/O Network Error");
+		} catch (ParserConfigurationException e) {
+			throw new KVException("Documentbuilder Error");
+		}
+		Element root = document.getDocumentElement();
+		
+		NodeList elements = root.getChildNodes();
 
+    	
+    	
+		
+    
+    }
+    
+    
+    public Boolean formatCheck(){
+    	if (!msgTypes.contains(this.msgType)){
+    		return false;
+    	}
+    	if (this.msgType.equals("getreq")){
+    		if (this.key.isEmpty()){
+    			return false;
+    		}
+    		if (this.value.isEmpty()){
+    			return false;
+    		}
+    	}
+    	if (this.msgType.equals("putreq")){
+    		if (this.key.isEmpty()){
+    			return false;
+    		}
+    	}
+    	if (this.msgType.equals("delreq")){
+    		if (this.key.isEmpty()){
+    			return false;
+    		}
+    	}
+    	if (this.msgType.equals("resp")){
+    		
+    	}
+    	return true;
+    }
+    
     /**
      * Generate the serialized XML representation for this message. See
      * the spec for details on the expected output format.
      *
      * @return the XML string representation of this KVMessage
      * @throws KVException with ERROR_INVALID_FORMAT or ERROR_PARSER
+     * @throws ParserConfigurationException 
      */
-    public String toXML() throws KVException {
+    
+    /*
+     *    	
+     *  if (!msgTypes.contains(this.msgType)){
+    		return false;
+    	}
+    	if (this.msgType.equals("getreq")){
+    		
+    	}
+    	if (this.msgType.equals("putreq")){
+    		
+    	}
+    	if (this.msgType.equals("delreq")){
+    		
+    	}
+    	if (this.msgType.equals("resp")){
+    		
+    	} 
+     */
+    
+    public String toXML() throws KVException, ParserConfigurationException {
         // implement me
+    	Document document = null;
+    	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    	DocumentBuilder builder = factory.newDocumentBuilder();
+    	Document xmldoc = builder.newDocument();
+    	
+    	Element root = document.createElement("KVMessage");
+		root.setAttribute("type", this.msgType);
+		xmldoc.appendChild(root);
+		xmldoc.setXmlStandalone(true);
+		
+		//check for sanity?
+    	
         return null;
     }
 
@@ -162,7 +244,7 @@ public class KVMessage implements Serializable {
     public String toString() {
         try {
             return this.toXML();
-        } catch (KVException e) {
+        } catch (KVException | ParserConfigurationException e) {
             // swallow KVException
             return e.toString();
         }
