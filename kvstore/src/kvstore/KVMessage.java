@@ -11,6 +11,9 @@ import javax.xml.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -185,14 +188,68 @@ public class KVMessage implements Serializable {
     	DocumentBuilder builder = factory.newDocumentBuilder();
     	Document xmldoc = builder.newDocument();
     	
-    	Element root = document.createElement("KVMessage");
-		root.setAttribute("type", this.msgType);
-		xmldoc.appendChild(root);
+    	Element xmlroot = document.createElement("KVMessage");
+		xmlroot.setAttribute("type", this.msgType);
+		xmldoc.appendChild(xmlroot);
 		xmldoc.setXmlStandalone(true);
 		
 		//check for sanity?
     	
-        return null;
+	     if (!msgTypes.contains(this.msgType)){
+
+	     }
+	    if (this.msgType.equals("getreq")){
+	    	Element xmlkey = document.createElement("Key");
+			xmlkey.appendChild(document.createTextNode(this.key));
+			Element xmlval = document.createElement("Value");
+			xmlval.appendChild(document.createTextNode(this.value));	
+			xmlroot.appendChild(xmlkey);
+			xmlroot.appendChild(xmlval);
+	    }
+	    if (this.msgType.equals("putreq")){
+	    	Element xmlkey = document.createElement("Key");
+			xmlkey.appendChild(document.createTextNode(this.key));
+			xmlroot.appendChild(xmlkey);
+	    }
+	    if (this.msgType.equals("delreq")){
+	    	Element xmlkey = document.createElement("Key");
+			xmlkey.appendChild(document.createTextNode(this.key));
+			xmlroot.appendChild(xmlkey);
+	    }
+	    //not sure how to bulletproof the responses
+	    if (this.msgType.equals("resp")){
+	    	Element xmlkey = document.createElement("Key");
+			xmlkey.appendChild(document.createTextNode(this.key));
+			Element xmlval = document.createElement("Value");
+			xmlval.appendChild(document.createTextNode(this.value));	
+			Element xmlmessage = document.createElement("Message");
+			xmlval.appendChild(document.createTextNode(this.message));	
+			xmlroot.appendChild(xmlkey);
+			xmlroot.appendChild(xmlval);
+			xmlroot.appendChild(xmlmessage);
+	    } 
+	    
+	    Transformer transformer = null;
+	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		try {
+			transformer = transformerFactory.newTransformer();
+		} catch (TransformerConfigurationException e) {
+			
+		}
+		
+		StringWriter xmlwriter = new StringWriter();
+
+		DOMSource source= new DOMSource(document);
+		StreamResult xmlout = new StreamResult(xmlwriter);
+ 
+		try {
+			transformer.transform(source, xmlout);
+		} catch (TransformerException e) {
+		
+		}
+		
+		
+        return xmlout.toString();
     }
 
 
