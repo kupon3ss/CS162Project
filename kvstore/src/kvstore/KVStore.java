@@ -2,7 +2,17 @@ package kvstore;
 
 import static kvstore.KVConstants.*;
 
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import java.util.Enumeration;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * This is a basic key-value store. Ideally this would go to disk, or some other
@@ -71,8 +81,32 @@ public class KVStore implements KeyValueInterface {
      * This method is best effort. Any exceptions that arise can be dropped.
      */
     public String toXML() {
-        // implement me
-        return null;
+    	try {
+    		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    		DocumentBuilder db = dbf.newDocumentBuilder();
+    		Document xmlDoc = db.newDocument();
+    		xmlDoc.setXmlStandalone(true);
+    		
+    		Element root = xmlDoc.createElement("KVStore");
+    		for (Enumeration<String> keys = store.keys(); keys.hasMoreElements();) {
+    			String k = keys.nextElement();
+    			Element pair = xmlDoc.createElement("KVPair");
+
+    			Element key = xmlDoc.createElement("Key");
+				key.setNodeValue(k);
+				Element value = xmlDoc.createElement("Value");
+				value.setNodeValue(store.get(key));
+				
+				pair.appendChild(key);
+				pair.appendChild(value);
+    			
+    			root.appendChild(pair);
+    		}
+    		xmlDoc.appendChild(root);
+    		return xmlDoc.getXmlEncoding();
+    	} catch (ParserConfigurationException e) {
+    		return null;
+    	}
     }
 
     @Override
