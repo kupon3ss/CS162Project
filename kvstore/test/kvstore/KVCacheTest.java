@@ -89,4 +89,39 @@ public class KVCacheTest {
     	assertEquals(1, cache.getReference("4"));
     }
     
+    /**
+     * Verify the xml creation works.
+     */
+    @Test
+    public void xmlTest1() {
+    	KVCache cache = new KVCache(1, 4);
+    	cache.put("1", "one");
+    	cache.put("2", "two");
+    	cache.put("3", "three");
+    	cache.put("4", "four");
+    	cache.get("1");
+    	cache.get("2");
+    	cache.get("4");
+    	cache.put("5", "five");
+    	
+    	System.out.println(cache.toString());
+    }
+    
+    /**
+     * Verify the xml creation works.
+     */
+    @Test
+    public void xmlTest2() {
+    	KVCache cache = new KVCache(2, 4);
+    	cache.put("1", "one");
+    	cache.put("2", "two");
+    	cache.put("3", "three");
+    	cache.put("4", "four");
+    	cache.put("1", "ONE");
+    	cache.get("2");
+    	cache.get("4");
+    	
+    	System.out.println(cache.toString());
+    }
+    
 }
