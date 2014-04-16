@@ -5,6 +5,12 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.*;
+
 /**
  * A set-associate cache which has a fixed maximum number of sets (numSets).
  * Each set has a maximum number of elements (MAX_ELEMS_PER_SET).
@@ -163,8 +169,27 @@ public class KVCache implements KeyValueInterface {
      * Serialize this store to XML. See spec for details on output format.
      */
     public String toXML() {
-        // implement me
-        return null;
+    	try {
+    		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    		DocumentBuilder db = dbf.newDocumentBuilder();
+    		Document xmlDoc = db.newDocument();
+    		
+    		Element root = xmlDoc.createElement("KVCache");
+    		for (int i = 0; i < cache.size(); i++) {
+    			Element set = xmlDoc.createElement("Set");
+    			set.setAttribute("Id", Integer.toString(i));
+    			for (int j = 0; j < cache.get(i).size(); j++) {
+    				Element entry = xmlDoc.createElement("CacheEntry");
+    				entry.setAttribute("isReferenced", String.valueOf(cache.get(i).get(j).getRef()));
+    				
+    				set.appendChild(entry);
+    			}
+    			root.appendChild(set);
+    		}
+    		return xmlDoc.getXmlEncoding();
+    	} catch (ParserConfigurationException e) {
+    		return null;
+    	}
     }
 
     @Override
