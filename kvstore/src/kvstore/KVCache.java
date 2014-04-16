@@ -173,6 +173,7 @@ public class KVCache implements KeyValueInterface {
     		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     		DocumentBuilder db = dbf.newDocumentBuilder();
     		Document xmlDoc = db.newDocument();
+    		xmlDoc.setXmlStandalone(true);
     		
     		Element root = xmlDoc.createElement("KVCache");
     		for (int i = 0; i < cache.size(); i++) {
@@ -196,6 +197,7 @@ public class KVCache implements KeyValueInterface {
     			}
     			root.appendChild(setXML);
     		}
+    		xmlDoc.appendChild(root);
     		return xmlDoc.getXmlEncoding();
     	} catch (ParserConfigurationException e) {
     		return null;
