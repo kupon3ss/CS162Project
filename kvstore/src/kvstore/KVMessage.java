@@ -115,9 +115,24 @@ public class KVMessage implements Serializable {
 			throw new KVException("Documentbuilder Error");
 		}
 		Element root = document.getDocumentElement();
-		
 		NodeList elements = root.getChildNodes();
 
+		
+		if (!msgTypes.contains(this.msgType)){
+			throw new KVException("Invalid Type Error");
+    	}
+    	if (this.msgType.equals("getreq")){
+    		
+    	}
+    	if (this.msgType.equals("putreq")){
+    		
+    	}
+    	if (this.msgType.equals("delreq")){
+    		
+    	}
+    	if (this.msgType.equals("resp")){
+    		
+    	} 
     	
     	
 		
@@ -266,6 +281,19 @@ public class KVMessage implements Serializable {
      */
     public void sendMessage(Socket sock) throws KVException {
         // implement me
+    	try {
+			String message = this.toXML();
+			PrintWriter socketout = new PrintWriter(sock.getOutputStream(), true);
+			socketout.print(message);
+			socketout.flush();
+			sock.shutdownOutput();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     public String getKey() {
