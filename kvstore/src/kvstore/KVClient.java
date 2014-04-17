@@ -2,7 +2,9 @@ package kvstore;
 
 import static kvstore.KVConstants.*;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * Client API used to issue requests to key-value server.
@@ -31,7 +33,13 @@ public class KVClient implements KeyValueInterface {
      */
     protected Socket connectHost() throws KVException {
         // implement me
-        return null;
+        try {
+        	return new Socket(this.server, this.port);
+        } catch (UnknownHostException uhe) {
+        	throw new KVException(ERROR_COULD_NOT_CONNECT);
+        } catch (IOException ioe) {
+        	throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
+        }
     }
 
     /**
@@ -53,6 +61,24 @@ public class KVClient implements KeyValueInterface {
     @Override
     public void put(String key, String value) throws KVException {
         // implement me
+    	try {
+    		//Maybe connect in different try catch block in case we fail with an open socket
+    		Socket sock = connectHost();
+    		
+    		KVMessage outMsg = new KVMessage(PUT_REQ);
+    		outMsg.setKey(key);
+    		outMsg.setValue(value);
+    		outMsg.sendMessage(sock);
+    		
+    		KVMessage inMsg = new KVMessage(sock);
+    		String message = inMsg.getMessage();
+    		//assertTrue(message != null);
+    		if( message != "Success") throw new KVException(message);
+    		
+    		closeHost(sock);
+    	} catch (KVException kve) {
+    		// handle me
+    	}
     }
 
     /**

@@ -16,8 +16,8 @@ import static org.mockito.Mockito.*;
 
 public class KVClientTest {
 	
-	//private Socket socketMock;
 	private String hostname;
+	private Socket mockedSocket;
 	
 	public KVClientTest() {
 		try {
@@ -72,8 +72,28 @@ public class KVClientTest {
     
     //invoke a 'could not receive data' error
     @Test(timeout = 20000)
-    public void testBadData() {
+    public void testBadDReceive() {
+    	KVClient client = new KVClient(hostname, 8080) {
+    		//Stub a faulty inputStream socket method
+    		@Override
+    		protected Socket connectHost() throws KVException {
+    			mockedSocket = mock(Socket.class);
+    			try {
+	    			when(mockedSocket.getInputStream()).thenThrow(new KVException(ERROR_COULD_NOT_RECEIVE_DATA));
+	    			return mockedSocket;
+    			} catch  (IOException ioe) {
+    				throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
+    			}
+    		}
+    	};
     	
+    	try {
+    		client.put("foo", "bar");
+    		fail("Didn't fail on a forced bad input stream");
+    	} catch (KVException kve) {
+    		String errorMsg = kve.getKVMessage().getMessage();
+    		assertEquals(errorMsg, ERROR_COULD_NOT_RECEIVE_DATA);
+    	}
     }
     
     //invoke a 'could not send data' error
