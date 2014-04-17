@@ -204,14 +204,11 @@ public class KVCache implements KeyValueInterface {
     public int getReference(String key) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
     	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i) != null) {
-    			if (set.get(i).getKey() == key) {
-    				set.get(i).setRefTrue();
-    				if (set.get(i).getRef()) {
-    					return 1;
-    				} else {
-    					return 0;
-    				}
+    		if (set.get(i).getKey() == key) {
+    			if (set.get(i).getRef()) {
+    				return 1;
+    			} else {
+    				return 0;
     			}
     		}
     	}
