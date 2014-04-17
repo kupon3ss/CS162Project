@@ -2,14 +2,20 @@ package kvstore;
 
 import static kvstore.KVConstants.*;
 
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Enumeration;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import java.util.Enumeration;
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -93,9 +99,9 @@ public class KVStore implements KeyValueInterface {
     			Element pair = xmlDoc.createElement("KVPair");
 
     			Element key = xmlDoc.createElement("Key");
-				key.setNodeValue(k);
+				key.appendChild(xmlDoc.createTextNode(k));
 				Element value = xmlDoc.createElement("Value");
-				value.setNodeValue(store.get(key));
+				value.appendChild(xmlDoc.createTextNode(store.get(k)));
 				
 				pair.appendChild(key);
 				pair.appendChild(value);
@@ -120,7 +126,20 @@ public class KVStore implements KeyValueInterface {
      * @param fileName the file to write the serialized store
      */
     public void dumpToFile(String fileName) {
-        // implement me
+    	File dump = new File(fileName);
+    	try {
+    		
+    		if (!dump.exists()) {
+    			dump.createNewFile();
+    		}
+    		
+    		BufferedWriter bw = new BufferedWriter(new FileWriter(dump.getAbsoluteFile()));
+    		bw.write(this.toString());
+    		bw.close();
+    		
+    	} catch (IOException e) {
+    		System.out.println("Dump failed.");
+    	}
     }
 
     /**
@@ -133,7 +152,14 @@ public class KVStore implements KeyValueInterface {
      */
     public void restoreFromFile(String fileName) {
         resetStore();
-
-        // implement me
+        File restore = new File(fileName);
+    	try {
+    		BufferedReader br = new BufferedReader(new FileReader(restore.getAbsolutePath()));
+    		
+    		br.close();
+    		
+    	} catch (IOException e) {
+    		System.out.println("Restore failed.");
+    	}
     }
 }

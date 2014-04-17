@@ -186,9 +186,9 @@ public class KVCache implements KeyValueInterface {
     				entry.setAttribute("isReferenced", String.valueOf(set.get(j).getRef()));
     				
     				Element key = xmlDoc.createElement("Key");
-    				key.setNodeValue(set.get(j).getKey());
+    				key.appendChild(xmlDoc.createTextNode(set.get(j).getKey()));
     				Element value = xmlDoc.createElement("Value");
-    				value.setNodeValue(set.get(j).getValue());
+    				value.appendChild(xmlDoc.createTextNode(set.get(j).getValue()));
     				
     				entry.appendChild(key);
     				entry.appendChild(value);
