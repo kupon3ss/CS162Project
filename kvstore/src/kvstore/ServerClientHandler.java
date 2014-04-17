@@ -31,6 +31,8 @@ public class ServerClientHandler implements NetworkHandler {
      */
     public ServerClientHandler(KVServer kvServer, int connections) {
         // implement me
+        this.kvServer = kvServer;
+        threadPool = new ThreadPool(connections);
     }
 
     /**
@@ -42,6 +44,7 @@ public class ServerClientHandler implements NetworkHandler {
     @Override
     public void handle(Socket client) {
         // implement me
+        threadPool.addJob(new ClientHandler(client));
     }
 
     /**
@@ -68,6 +71,27 @@ public class ServerClientHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
+            KVMessage response;
+            try {
+                KVMessage mess = new KVMessage(client);
+                String request = mess.getMsgType();
+                response = new KVMessage(RESP, "success");
+                if (request.equals(PUT_REQ))
+                    kvServer.put(mess.getKey(), mess.getValue());
+                else if (request.equals(DEL_REQ))
+                    kvServer.del(mess.getKey());
+                else if (request.equals(GET_REQ))
+                    response.setValue(kvServer.get(mess.getKey()));
+                else
+                    throw new KVException("Invalid request");
+            } catch (KVException kve) {
+                response = kve.getKVMessage();
+            }
+            try {
+                response.sendMessage(client);
+            } catch (KVException kve) {
+                // do nothing (no way to report to client that sending a message to it failed)
+            }
         }
     }
 
