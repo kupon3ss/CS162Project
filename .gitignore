@@ -5,3 +5,5 @@ bin/
 testreport/
 
 .*.sw[nop]
+
+*.iml

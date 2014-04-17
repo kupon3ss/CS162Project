@@ -1,10 +1,15 @@
 package kvstore;
 
+import java.util.LinkedList;
+
 
 public class ThreadPool {
 
     /* Array of threads in the pool */
     private Thread threads[];
+
+    /* the queue of jobs waiting to be executed by the worker threads in the pool */
+    private LinkedList<Runnable> jobQueue;
 
 
     /**
@@ -14,8 +19,12 @@ public class ThreadPool {
      */
     public ThreadPool(int size) {
         threads = new Thread[size];
-
         // implement me
+        jobQueue = new LinkedList<Runnable>();
+        for (int i = 0; i < size; i++) {
+            threads[i] = new WorkerThread(this);
+            threads[i].start();
+        }
     }
 
     /**
@@ -29,6 +38,7 @@ public class ThreadPool {
      */
     public void addJob(Runnable r) throws InterruptedException {
         // implement me
+        jobQueue.addLast(r);
     }
 
     /**
@@ -39,7 +49,8 @@ public class ThreadPool {
      */
     public Runnable getJob() throws InterruptedException {
         // implement me
-        return null;
+        while (jobQueue.isEmpty()); //yield -- get rid of busy waiting
+        return this.jobQueue.removeFirst();
     }
 
     /**
@@ -64,6 +75,14 @@ public class ThreadPool {
         @Override
         public void run() {
             // implement me
+            Thread job;
+            while (true) {
+                //get a job (unless blocked) and execute it
+                job = new Thread(threadPool.getJob());
+                job.start();
+                //wait for job to finish before fetching a new one
+                job.join();
+            }
         }
     }
 }
