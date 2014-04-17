@@ -40,6 +40,21 @@ public class KVMessageTest {
         assertNull(kvm.getKey());
         assertNull(kvm.getValue());
     }
+    
+    @Test
+    public void constructorTestbasic() throws KVException{
+    	KVMessage kvm = new KVMessage("putreq");
+    	KVMessage kvm2 = new KVMessage(kvm);
+    	assertNotNull(kvm);
+    	assertEquals("putreq", kvm.getMsgType());
+    	assertNotNull(kvm2);
+    	assertEquals("putreq", kvm2.getMsgType());
+    	try {
+			KVMessage kvm3 = new KVMessage("whateveryo");
+		} catch (KVException e) {
+			System.out.print(e.getKVMessage());
+		}
+    }
 
     /* Begin helper methods */
 
