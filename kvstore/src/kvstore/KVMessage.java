@@ -121,17 +121,56 @@ public class KVMessage implements Serializable {
 		if (!msgTypes.contains(root.getAttribute("type"))){
 			throw new KVException("Invalid Type Error");
     	}
-    	if (root.getAttribute("type").equals("getreq")){
-    		this.msgType = root.getAttribute("type");
-    	}
     	if (root.getAttribute("type").equals("putreq")){
     		this.msgType = root.getAttribute("type");
+    		for (int i = 0; i < elements.getLength(); ++i) {
+    			Node element = elements.item(i);
+    			String elementtype = element.getNodeName();
+                if (elementtype.equals("Key")) {
+                	this.key = element.getTextContent();
+                } else if (elementtype.equals("Value")) {
+                	this.value = element.getTextContent();
+                }
+    		}
+    	}
+    	if (root.getAttribute("type").equals("getreq")){
+    		this.msgType = root.getAttribute("type");
+    		for (int i = 0; i < elements.getLength(); ++i) {
+    			Node element = elements.item(i);
+    			String elementtype = element.getNodeName();
+                if (elementtype.equals("Key")) {
+                	this.key = element.getTextContent();
+                }
+    		}
     	}
     	if (root.getAttribute("type").equals("delreq")){
     		this.msgType = root.getAttribute("type");
+    		for (int i = 0; i < elements.getLength(); ++i) {
+    			Node element = elements.item(i);
+    			String elementtype = element.getNodeName();
+                if (elementtype.equals("Key")) {
+                	this.key = element.getTextContent();
+                }
+    		}
     	}
+    	// need a check and bulletproofing here
+   
     	if (root.getAttribute("type").equals("resp")){
     		this.msgType = root.getAttribute("type");
+    		for (int i = 0; i < elements.getLength(); ++i) {
+    			Node element = elements.item(i);
+    			String elementtype = element.getNodeName();
+                if (elementtype.equals("Key")) {
+                	this.key = element.getTextContent();
+                } 
+                else if (elementtype.equals("Value")) {
+                	this.value = element.getTextContent();
+                }
+                else if (elementtype.equals("Message")) {
+                	this.message = element.getTextContent();
+                }
+                
+    		}
     	} 
     	
     	
