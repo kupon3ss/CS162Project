@@ -118,20 +118,20 @@ public class KVMessage implements Serializable {
 		NodeList elements = root.getChildNodes();
 
 		
-		if (!msgTypes.contains(this.msgType)){
+		if (!msgTypes.contains(root.getAttribute("type"))){
 			throw new KVException("Invalid Type Error");
     	}
-    	if (this.msgType.equals("getreq")){
-    		
+    	if (root.getAttribute("type").equals("getreq")){
+    		this.msgType = root.getAttribute("type");
     	}
-    	if (this.msgType.equals("putreq")){
-    		
+    	if (root.getAttribute("type").equals("putreq")){
+    		this.msgType = root.getAttribute("type");
     	}
-    	if (this.msgType.equals("delreq")){
-    		
+    	if (root.getAttribute("type").equals("delreq")){
+    		this.msgType = root.getAttribute("type");
     	}
-    	if (this.msgType.equals("resp")){
-    		
+    	if (root.getAttribute("type").equals("resp")){
+    		this.msgType = root.getAttribute("type");
     	} 
     	
     	
@@ -198,12 +198,12 @@ public class KVMessage implements Serializable {
     
     public String toXML() throws KVException, ParserConfigurationException {
         // implement me
-    	Document document = null;
+    	Document xmldoc = null;
     	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     	DocumentBuilder builder = factory.newDocumentBuilder();
-    	Document xmldoc = builder.newDocument();
+    	xmldoc = builder.newDocument();
     	
-    	Element xmlroot = document.createElement("KVMessage");
+    	Element xmlroot = xmldoc.createElement("KVMessage");
 		xmlroot.setAttribute("type", this.msgType);
 		xmldoc.appendChild(xmlroot);
 		xmldoc.setXmlStandalone(true);
@@ -214,31 +214,31 @@ public class KVMessage implements Serializable {
 
 	     }
 	    if (this.msgType.equals("getreq")){
-	    	Element xmlkey = document.createElement("Key");
-			xmlkey.appendChild(document.createTextNode(this.key));
-			Element xmlval = document.createElement("Value");
-			xmlval.appendChild(document.createTextNode(this.value));	
+	    	Element xmlkey = xmldoc.createElement("Key");
+			xmlkey.appendChild(xmldoc.createTextNode(this.key));
+			Element xmlval = xmldoc.createElement("Value");
+			xmlval.appendChild(xmldoc.createTextNode(this.value));	
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 	    }
 	    if (this.msgType.equals("putreq")){
-	    	Element xmlkey = document.createElement("Key");
-			xmlkey.appendChild(document.createTextNode(this.key));
+	    	Element xmlkey = xmldoc.createElement("Key");
+			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
 	    if (this.msgType.equals("delreq")){
-	    	Element xmlkey = document.createElement("Key");
-			xmlkey.appendChild(document.createTextNode(this.key));
+	    	Element xmlkey = xmldoc.createElement("Key");
+			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
 	    //not sure how to bulletproof the responses
 	    if (this.msgType.equals("resp")){
-	    	Element xmlkey = document.createElement("Key");
-			xmlkey.appendChild(document.createTextNode(this.key));
-			Element xmlval = document.createElement("Value");
-			xmlval.appendChild(document.createTextNode(this.value));	
-			Element xmlmessage = document.createElement("Message");
-			xmlval.appendChild(document.createTextNode(this.message));	
+	    	Element xmlkey = xmldoc.createElement("Key");
+			xmlkey.appendChild(xmldoc.createTextNode(this.key));
+			Element xmlval = xmldoc.createElement("Value");
+			xmlval.appendChild(xmldoc.createTextNode(this.value));	
+			Element xmlmessage = xmldoc.createElement("Message");
+			xmlval.appendChild(xmldoc.createTextNode(this.message));	
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 			xmlroot.appendChild(xmlmessage);
@@ -254,7 +254,7 @@ public class KVMessage implements Serializable {
 		
 		StringWriter xmlwriter = new StringWriter();
 
-		DOMSource source= new DOMSource(document);
+		DOMSource source= new DOMSource(xmldoc);
 		StreamResult xmlout = new StreamResult(xmlwriter);
  
 		try {
