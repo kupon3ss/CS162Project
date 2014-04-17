@@ -21,6 +21,7 @@ public class KVCache implements KeyValueInterface {
 	
 	ArrayList<LinkedList<CacheEntry>> cache;
 	ReentrantLock[] locks;
+	int maxElemsPerSet;
 
     /**
      * Constructs a second-chance-replacement cache.
@@ -30,19 +31,11 @@ public class KVCache implements KeyValueInterface {
      */
     public KVCache(int numSets, int maxElemsPerSet) {
     	for (int i = 0; i < numSets; i++) {
-    		cache.add(createSet(maxElemsPerSet));
+    		cache.add(new LinkedList<CacheEntry>());
     	}
+    	this.maxElemsPerSet = maxElemsPerSet;
     }
     
-    //Creates a set of null CacheEntries.
-    public LinkedList<CacheEntry> createSet(int numEntries) {
-    	LinkedList<CacheEntry> set = new LinkedList<CacheEntry>();
-    	for (int i = 0; i < numEntries; i++) {
-    		set.add(null);
-    	}
-    	return set;
-    }
-
     /**
      * Retrieves an entry from the cache.
      * Assumes access to the corresponding set has already been locked by the
@@ -56,11 +49,9 @@ public class KVCache implements KeyValueInterface {
     public String get(String key) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
     	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i) != null) {
-    			if (set.get(i).getKey() == key) {
-    				set.get(i).setRefTrue();
-    				return set.get(i).getValue();
-    			}
+    		if (set.get(i).getKey() == key) {
+    			set.get(i).setRefTrue();
+    			return set.get(i).getValue();
     		}
     	}
     	return null;
@@ -85,42 +76,39 @@ public class KVCache implements KeyValueInterface {
     @Override
     public void put(String key, String value) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
-    	int empty = -1;
+    	boolean replaced = false;
     	
-    	//Either retrieves the first null spot or replaces key, value pair
+    	//Checks if key already exists in set
     	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i) != null) {
-    			if (set.get(i).getKey() == key) {
-    				set.get(i).setValue(value);
-    				set.get(i).setRefTrue();
-    			}
-    		} else if(empty == -1) {
-    			empty = i;
+    		if (set.get(i).getKey() == key) {
+    			set.get(i).setValue(value);
+    			set.get(i).setRefTrue();
+    			replaced = true;
     		}
     	}
     	
-    	//Either puts key, value pair at null spot or uses second chance algorithm to replace element
-    	if (empty != -1) {
-    		set.remove(empty);
-    		set.add(empty, new CacheEntry(key, value));
-    	} else {
-    		//Set must be full here
-    		while (true) {
-    			CacheEntry secondChance; 
-    			if (set.getFirst().getRef()) {
-    				//Gives second chance. Removes head and adds onto tail with ref bit false
-    				secondChance = set.remove();
-    				secondChance.setRefFalse();
-    				set.addLast(secondChance);
-    			} else {
-    				//No second chance so remove head and adds new entry onto tail
-    				set.remove();
-    				set.addLast(new CacheEntry(key, value));
-    				break;
-    			}
+    	//Should only run if key did not exist and key, value not replaced
+    	//Either use second chance algorithm or append onto end of list
+    	if (!replaced) {
+    		if (set.size() == maxElemsPerSet) {
+    			while (true) {
+        			CacheEntry secondChance; 
+        			if (set.getFirst().getRef()) {
+        				//Gives second chance. Removes head and adds onto tail with ref bit false
+        				secondChance = set.remove();
+        				secondChance.setRefFalse();
+        				set.addLast(secondChance);
+        			} else {
+        				//No second chance so remove head and adds new entry onto tail
+        				set.remove();
+        				set.add(new CacheEntry(key, value));
+        				break;
+        			}
+        		}
+    		} else {
+    			set.add(new CacheEntry(key, value));
     		}
-    	}
-    	
+    	}	
     }
 
     /**
@@ -134,11 +122,8 @@ public class KVCache implements KeyValueInterface {
     public void del(String key) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
     	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i) != null) {
-    			if (set.get(i).getKey() == key) {
-    				set.remove(i);
-    				set.add(null);
-    			}
+    		if (set.get(i).getKey() == key) {
+    			set.remove(i);
     		}
     	}
     }
