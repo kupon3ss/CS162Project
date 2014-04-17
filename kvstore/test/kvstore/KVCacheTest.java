@@ -82,10 +82,6 @@ public class KVCacheTest {
     	cache.put("5", "five");
     	
     	assertEquals(null, cache.get("3"));
-    	assertEquals("five", cache.get("5"));
-    	assertEquals("one", cache.get("1"));
-    	assertEquals("two", cache.get("2"));
-    	assertEquals("four", cache.get("4"));
     	
     	assertEquals(0, cache.getReference("1"));
     	assertEquals(0, cache.getReference("2"));

@@ -31,8 +31,10 @@ public class KVCache implements KeyValueInterface {
      */
     public KVCache(int numSets, int maxElemsPerSet) {
     	cache = new ArrayList<LinkedList<CacheEntry>>();
+    	locks = new ReentrantLock[maxElemsPerSet];
     	for (int i = 0; i < numSets; i++) {
     		cache.add(new LinkedList<CacheEntry>());
+    		locks[i] = new ReentrantLock();
     	}
     	this.maxElemsPerSet = maxElemsPerSet;
     }
@@ -184,7 +186,8 @@ public class KVCache implements KeyValueInterface {
     			root.appendChild(setXML);
     		}
     		xmlDoc.appendChild(root);
-    		return xmlDoc.getXmlEncoding();
+    		
+    		return xmlDoc.toString();
     	} catch (ParserConfigurationException e) {
     		return null;
     	}
