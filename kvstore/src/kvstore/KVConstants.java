@@ -13,7 +13,7 @@ public class KVConstants {
     public static final String ABORT    = "abort";
     public static final String COMMIT   = "commit";
     public static final String ACK      = "ack";
-    public static final String SUCCESS  = "success";
+    public static final String SUCCESS  = "Success";
 
     /**
      * Error message used if an IOException arises while parsing the
