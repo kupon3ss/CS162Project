@@ -49,6 +49,12 @@ public class KVClient implements KeyValueInterface {
      */
     protected void closeHost(Socket sock) {
         // implement me
+    	try {
+			sock.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -59,10 +65,13 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public void put(String key, String value) throws KVException {
+    	Socket sock = null;
     	try {
-    		//Maybe connect in different try catch block in case we fail with an open socket
-    		Socket sock = connectHost();
+    		if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
+    		if(value == "" || value == null) throw new KVException(ERROR_INVALID_VALUE);
     		
+    		sock = connectHost();
+
     		KVMessage outMsg = new KVMessage(PUT_REQ);
     		outMsg.setKey(key);
     		outMsg.setValue(value);
@@ -71,11 +80,13 @@ public class KVClient implements KeyValueInterface {
     		KVMessage inMsg = new KVMessage(sock);
     		String message = inMsg.getMessage();
     		//assertTrue(message != null);
+    		if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
     		if( message != SUCCESS) throw new KVException(message);
     		
-    		closeHost(sock);
     	} catch (KVException kve) {
-    		// handle me
+    		throw kve;
+    	} finally {
+    		if(sock != null) closeHost(sock);
     	}
     }
 
@@ -88,23 +99,30 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public String get(String key) throws KVException {
+    	Socket sock = null;
+    	String toReturn = null;
         try {
-        	Socket sock = connectHost();
+        	if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
+        	
+        	sock = connectHost();
         	KVMessage outMsg = new KVMessage(GET_REQ);
         	outMsg.setKey(key);
         	outMsg.sendMessage(sock);
         	
         	KVMessage inMsg = new KVMessage(sock);
         	String message  = inMsg.getMessage();
-        	if(message != SUCCESS) throw new KVException(message);
-        	String toReturn = inMsg.getValue();
         	
-        	closeHost(sock);
-        	return toReturn;
+        	if(message != null) throw new KVException(message);
+        	//Confirm that we got the right key back
+        	if(inMsg.getKey() != key) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
+        	toReturn = inMsg.getValue();
+
         } catch (KVException kve) {
-        	//handle me
-        	return null;
+        	throw kve;
+        } finally {
+        	if(sock != null) closeHost(sock);
         }
+        return toReturn;
     }
 
     /**
@@ -115,8 +133,11 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public void del(String key) throws KVException {
+    	Socket sock = null;
         try {
-        	Socket sock = connectHost();
+        	if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
+        	
+        	sock = connectHost();
         	
         	KVMessage outMsg = new KVMessage(DEL_REQ);
         	outMsg.setKey(key);
@@ -124,11 +145,13 @@ public class KVClient implements KeyValueInterface {
         	
         	KVMessage inMsg = new KVMessage(sock);
         	String message = inMsg.getMessage();
+        	if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
         	if(message != SUCCESS) throw new KVException(message);
-        	
-        	closeHost(sock);
+
         } catch (KVException kve) {
-        	//handle me
+        	throw kve;
+        } finally {
+        	if(sock != null) closeHost(sock);
         }
     }
 
