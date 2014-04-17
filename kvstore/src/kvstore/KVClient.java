@@ -32,7 +32,6 @@ public class KVClient implements KeyValueInterface {
      * @throws KVException if unable to make or connect socket
      */
     protected Socket connectHost() throws KVException {
-        // implement me
         try {
         	return new Socket(this.server, this.port);
         } catch (UnknownHostException uhe) {
@@ -60,7 +59,6 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public void put(String key, String value) throws KVException {
-        // implement me
     	try {
     		//Maybe connect in different try catch block in case we fail with an open socket
     		Socket sock = connectHost();
@@ -73,7 +71,7 @@ public class KVClient implements KeyValueInterface {
     		KVMessage inMsg = new KVMessage(sock);
     		String message = inMsg.getMessage();
     		//assertTrue(message != null);
-    		if( message != "Success") throw new KVException(message);
+    		if( message != SUCCESS) throw new KVException(message);
     		
     		closeHost(sock);
     	} catch (KVException kve) {
@@ -90,8 +88,23 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public String get(String key) throws KVException {
-        // implement me
-        return null;
+        try {
+        	Socket sock = connectHost();
+        	KVMessage outMsg = new KVMessage(GET_REQ);
+        	outMsg.setKey(key);
+        	outMsg.sendMessage(sock);
+        	
+        	KVMessage inMsg = new KVMessage(sock);
+        	String message  = inMsg.getMessage();
+        	if(message != SUCCESS) throw new KVException(message);
+        	String toReturn = inMsg.getValue();
+        	
+        	closeHost(sock);
+        	return toReturn;
+        } catch (KVException kve) {
+        	//handle me
+        	return null;
+        }
     }
 
     /**
@@ -102,7 +115,21 @@ public class KVClient implements KeyValueInterface {
      */
     @Override
     public void del(String key) throws KVException {
-        // implement me
+        try {
+        	Socket sock = connectHost();
+        	
+        	KVMessage outMsg = new KVMessage(DEL_REQ);
+        	outMsg.setKey(key);
+        	outMsg.sendMessage(sock);
+        	
+        	KVMessage inMsg = new KVMessage(sock);
+        	String message = inMsg.getMessage();
+        	if(message != SUCCESS) throw new KVException(message);
+        	
+        	closeHost(sock);
+        } catch (KVException kve) {
+        	//handle me
+        }
     }
 
 
