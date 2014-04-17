@@ -29,7 +29,7 @@ public class KVMessage implements Serializable {
     private String value;
     private String message;
     
-    public static final String[] SET_TYPES = new String[] { "getreq", "putreq", "delreq", "resp" };
+    public static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP };
     private static final Set<String> msgTypes = new HashSet<String>(Arrays.asList(SET_TYPES));
     private static NoCloseInputStream OpenStream;
 
@@ -108,20 +108,20 @@ public class KVMessage implements Serializable {
 			builder = factory.newDocumentBuilder();
 			document = builder.parse(OpenStream);			
 		} catch (SAXException e) {
-			throw new KVException("XML Parsing Error");
+			throw new KVException(ERROR_INVALID_FORMAT);
 		} catch (IOException e) {
-			throw new KVException("I/O Network Error");
+			throw new KVException(ERROR_COULD_NOT_CONNECT);
 		} catch (ParserConfigurationException e) {
-			throw new KVException("Documentbuilder Error");
+			throw new KVException(ERROR_PARSER);
 		}
 		Element root = document.getDocumentElement();
 		NodeList elements = root.getChildNodes();
 
 		
 		if (!msgTypes.contains(root.getAttribute("type"))){
-			throw new KVException("Invalid Type Error");
+			throw new KVException(ERROR_INVALID_FORMAT);
     	}
-    	if (root.getAttribute("type").equals("putreq")){
+    	if (root.getAttribute("type").equals(PUT_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -133,7 +133,7 @@ public class KVMessage implements Serializable {
                 }
     		}
     	}
-    	if (root.getAttribute("type").equals("getreq")){
+    	if (root.getAttribute("type").equals(GET_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -143,7 +143,7 @@ public class KVMessage implements Serializable {
                 }
     		}
     	}
-    	if (root.getAttribute("type").equals("delreq")){
+    	if (root.getAttribute("type").equals(DEL_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -155,7 +155,7 @@ public class KVMessage implements Serializable {
     	}
     	// need a check and bulletproofing here
    
-    	if (root.getAttribute("type").equals("resp")){
+    	if (root.getAttribute("type").equals(RESP)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -183,7 +183,7 @@ public class KVMessage implements Serializable {
     	if (!msgTypes.contains(this.msgType)){
     		return false;
     	}
-    	if (this.msgType.equals("getreq")){
+    	if (this.msgType.equals(GET_REQ)){
     		if (this.key.isEmpty()){
     			return false;
     		}
@@ -191,17 +191,17 @@ public class KVMessage implements Serializable {
     			return false;
     		}
     	}
-    	if (this.msgType.equals("putreq")){
+    	if (this.msgType.equals(PUT_REQ)){
     		if (this.key.isEmpty()){
     			return false;
     		}
     	}
-    	if (this.msgType.equals("delreq")){
+    	if (this.msgType.equals(DEL_REQ)){
     		if (this.key.isEmpty()){
     			return false;
     		}
     	}
-    	if (this.msgType.equals("resp")){
+    	if (this.msgType.equals(RESP)){
     		
     	}
     	return true;
@@ -221,25 +221,30 @@ public class KVMessage implements Serializable {
      *  if (!msgTypes.contains(this.msgType)){
     		return false;
     	}
-    	if (this.msgType.equals("getreq")){
+    	if (this.msgType.equals(GET_REQ)){
     		
     	}
-    	if (this.msgType.equals("putreq")){
+    	if (this.msgType.equals(PUT_REQ)){
     		
     	}
-    	if (this.msgType.equals("delreq")){
+    	if (this.msgType.equals(DEL_REQ)){
     		
     	}
-    	if (this.msgType.equals("resp")){
+    	if (this.msgType.equals(RESP)){
     		
     	} 
      */
     
-    public String toXML() throws KVException, ParserConfigurationException {
+    public String toXML() throws KVException{
         // implement me
     	Document xmldoc = null;
     	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    	DocumentBuilder builder = factory.newDocumentBuilder();
+    	DocumentBuilder builder = null;
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e1) {
+			throw new KVException ("XML Builder Error");
+		}
     	xmldoc = builder.newDocument();
     	
     	Element xmlroot = xmldoc.createElement("KVMessage");
@@ -252,7 +257,7 @@ public class KVMessage implements Serializable {
 	     if (!msgTypes.contains(this.msgType)){
 
 	     }
-	    if (this.msgType.equals("getreq")){
+	    if (this.msgType.equals(GET_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			Element xmlval = xmldoc.createElement("Value");
@@ -260,18 +265,18 @@ public class KVMessage implements Serializable {
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 	    }
-	    if (this.msgType.equals("putreq")){
+	    if (this.msgType.equals(PUT_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
-	    if (this.msgType.equals("delreq")){
+	    if (this.msgType.equals(DEL_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
 	    //not sure how to bulletproof the responses
-	    if (this.msgType.equals("resp")){
+	    if (this.msgType.equals(RESP)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			Element xmlval = xmldoc.createElement("Value");
@@ -299,9 +304,8 @@ public class KVMessage implements Serializable {
 		try {
 			transformer.transform(source, xmlout);
 		} catch (TransformerException e) {
-		
+			throw new KVException (ERROR_INVALID_FORMAT);
 		}
-		
 		
         return xmlout.toString();
     }
@@ -326,12 +330,8 @@ public class KVMessage implements Serializable {
 			socketout.print(message);
 			socketout.flush();
 			sock.shutdownOutput();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new KVException (ERROR_COULD_NOT_SEND_DATA);
 		}
     }
 
@@ -368,7 +368,7 @@ public class KVMessage implements Serializable {
     public String toString() {
         try {
             return this.toXML();
-        } catch (KVException | ParserConfigurationException e) {
+        } catch (KVException e) {
             // swallow KVException
             return e.toString();
         }
