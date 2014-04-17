@@ -1,6 +1,8 @@
 package kvstore;
 
 import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ThreadPool {
@@ -10,6 +12,10 @@ public class ThreadPool {
 
     /* the queue of jobs waiting to be executed by the worker threads in the pool */
     private LinkedList<Runnable> jobQueue;
+
+    /* lock & condition for the jobQueue */
+    private ReentrantLock jobsLock;
+    private Condition jobsCondition;
 
 
     /**
@@ -21,11 +27,22 @@ public class ThreadPool {
         threads = new Thread[size];
         // implement me
         jobQueue = new LinkedList<Runnable>();
+        jobsLock = new ReentrantLock();
+        jobsCondition = jobsLock.newCondition();
         for (int i = 0; i < size; i++) {
             threads[i] = new WorkerThread(this);
             threads[i].start();
         }
     }
+
+    /*public void startThreads() {
+        for (Thread worker : threads)
+            worker.start();
+    }
+    public void interruptThreads() {
+        for (Thread worker : threads)
+            worker.interrupt();
+    }*/
 
     /**
      * Add a job to the queue of jobs that have to be executed. As soon as a
@@ -33,24 +50,32 @@ public class ThreadPool {
      * if one exists and start processing it.
      *
      * @param r job that has to be executed
-     * @throws InterruptedException if thread is interrupted while in blocked
+     * (does not throw) InterruptedException if thread is interrupted while in blocked
      *         state. Your implementation may or may not actually throw this.
      */
-    public void addJob(Runnable r) throws InterruptedException {
+    public void addJob(Runnable r) {//} throws InterruptedException {
         // implement me
+        jobsLock.lock();
         jobQueue.addLast(r);
+        jobsCondition.signal();
+        jobsLock.unlock();
     }
 
     /**
      * Block until a job is present in the queue and retrieve the job
      * @return A runnable task that has to be executed
-     * @throws InterruptedException if thread is interrupted while in blocked
+     * (does not throw) InterruptedException if thread is interrupted while in blocked
      *         state. Your implementation may or may not actually throw this.
      */
-    public Runnable getJob() throws InterruptedException {
+    public Runnable getJob() {//throws InterruptedException {
         // implement me
-        while (jobQueue.isEmpty()); //yield -- get rid of busy waiting
-        return this.jobQueue.removeFirst();
+        jobsLock.lock();
+        while (jobQueue.isEmpty()) {
+            jobsCondition.awaitUninterruptibly();
+        }
+        Runnable job = jobQueue.removeFirst();
+        jobsLock.unlock();
+        return job;
     }
 
     /**
@@ -77,11 +102,15 @@ public class ThreadPool {
             // implement me
             Thread job;
             while (true) {
-                //get a job (unless blocked) and execute it
+                // get a job (unless blocked) and execute it
                 job = new Thread(threadPool.getJob());
                 job.start();
-                //wait for job to finish before fetching a new one
-                job.join();
+                // wait for job to finish before fetching a new one
+                try {
+                    job.join();
+                } catch (InterruptedException e) {
+                    // if the thread was interrupted, just get the next one
+                }
             }
         }
     }

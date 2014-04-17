@@ -3,6 +3,8 @@ package kvstore;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 /**
  * This is a generic class that should handle all TCP network connections
@@ -78,21 +80,26 @@ public class SocketServer {
     public void start() throws IOException {
         /*while (!stopped) {
             // implement me
+        }*/
+        try {
+            server.setSoTimeout(SocketServer.TIMEOUT);
+        } catch (SocketException se) {
+            // TCP error? not sure whether to catch this or let it go as an IOException--setting the timeout
+            // technically occurs before listening for or servicing any requests, so that would imply catch it.
+        }
+        Socket s;
+        while (!stopped) {
+            try {
+                s = server.accept(); // IOException thrown here. this is the only unhandled exception (should be)
+                handler.handle(s); // what if this takes longer than TIMEOUT? (waiting on lock)
+            } catch (SocketTimeoutException ste) {
+                // do nothing. if a timeout occurs, just try to accept a connection again,
+                // unless stopped is true. this is the mechanism make  stop  close the
+            }
         }
         try {
             server.close();
         } catch (IOException e) {
-            // ignore error
-        }*/
-        try {
-            server.setSoTimeout(SocketServer.TIMEOUT);
-            Socket s;
-            while (! stopped) {
-                s = server.accept();
-                handler.handle(s);
-            }
-            server.close();
-        } catch (Exception e) {
             // ignore error
         }
     }
