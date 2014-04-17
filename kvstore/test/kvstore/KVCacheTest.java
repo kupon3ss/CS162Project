@@ -14,6 +14,7 @@ public class KVCacheTest {
         KVCache cache = new KVCache(1, 4);
         cache.put("hello", "world");
         assertEquals("world", cache.get("hello"));
+        System.out.println("Test0 Success");
     }
 
     /**
@@ -26,6 +27,7 @@ public class KVCacheTest {
         assertEquals("world", cache.get("hello"));
         cache.put("hello", "friend");
         assertEquals("friend", cache.get("hello"));
+        System.out.println("Test1 Success");
     }
     
     /**
@@ -38,6 +40,7 @@ public class KVCacheTest {
         assertEquals("world", cache.get("hello"));
         cache.del("hello");
         assertEquals(null, cache.get("hello"));
+        System.out.println("Test2 Success");
     }
     
     /**
@@ -60,6 +63,7 @@ public class KVCacheTest {
         cache.put("hi", "buddy");
         assertEquals("buddy", cache.get("hi"));
         assertEquals(1, cache.getReference("hi"));
+        System.out.println("Test3 Success");
     }
     
     /**
@@ -87,6 +91,7 @@ public class KVCacheTest {
     	assertEquals(0, cache.getReference("2"));
     	assertEquals(0, cache.getReference("5"));
     	assertEquals(1, cache.getReference("4"));
+    	System.out.println("Test4 Success");
     }
     
     /**
@@ -105,6 +110,7 @@ public class KVCacheTest {
     	cache.put("5", "five");
     	
     	System.out.println(cache.toString());
+    	System.out.println("Test5 Success");
     }
     
     /**
@@ -122,6 +128,7 @@ public class KVCacheTest {
     	cache.get("4");
     	
     	System.out.println(cache.toString());
+    	System.out.println("Test6 Success");
     }
     
 }

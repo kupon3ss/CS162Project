@@ -50,7 +50,7 @@
         <attribute name="haltonfailure" default="yes" />
         <element name="testspecification" implicit="yes" />
         <sequential>
-            <junit printsummary="on" fork="yes" timeout="600000" haltonfailure="@{haltonfailure}" maxmemory="128M" failureproperty="junit.failed">
+            <junit printsummary="on" fork="yes" timeout="600000" haltonfailure="@{haltonfailure}" maxmemory="128M" failureproperty="junit.failed" showoutput="yes">
                 <classpath refid="classpath.test" />
                 <formatter type="plain" usefile="false"/>
                 <assertions><enable/></assertions>
