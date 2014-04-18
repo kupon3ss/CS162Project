@@ -54,13 +54,16 @@ public class ThreadPoolTest {
         pool.addJob(thread3);
         pool.addJob(thread4);
         
-        while(thread1.getState() != Thread.State.NEW);
+        while(thread1.getState() == Thread.State.NEW);
         thread1.join();
         assertEquals(9999, thread1put);
+        while(thread2.getState() == Thread.State.NEW);
         thread2.join();
         assertEquals(78, thread2put);
+        while(thread3.getState() == Thread.State.NEW);
         thread3.join();
         assertEquals("somestring", thread3put);
+        while(thread4.getState() == Thread.State.NEW);
         thread4.join();
     }
 
