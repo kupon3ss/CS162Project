@@ -35,7 +35,7 @@ public class KVCache implements KeyValueInterface {
      */
     public KVCache(int numSets, int maxElemsPerSet) {
     	cache = new ArrayList<LinkedList<CacheEntry>>();
-    	locks = new ReentrantLock[maxElemsPerSet];
+    	locks = new ReentrantLock[numSets];
     	for (int i = 0; i < numSets; i++) {
     		cache.add(new LinkedList<CacheEntry>());
     		locks[i] = new ReentrantLock();

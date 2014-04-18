@@ -21,12 +21,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.FileReader;
-
-
+import java.io.StringReader;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 import java.io.StringWriter;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * This is a basic key-value store. Ideally this would go to disk, or some other
@@ -179,30 +184,41 @@ public class KVStore implements KeyValueInterface {
         resetStore();
         File restore = new File(fileName);
     	try {
-    		BufferedReader br = new BufferedReader(new FileReader(restore.getAbsolutePath()));
-    		
-    		String line = br.readLine(); //<?xml version="1.0" encoding="UTF-8"?>
-    		line = br.readLine(); //<KVStore>
-    		line = br.readLine();
-    		while (line != null) {
-    			if (line == "</KVStore>") {
-    				break;
-    			} else if (line == "<Key>") {
-    				String key = br.readLine(); //key
-    				br.readLine(); //</Key>
-    				br.readLine(); //<Value>
-    				String value = br.readLine();//value 
-    				store.put(key, value);
-    				br.readLine();//</Value>
-    				line = br.readLine();
-    			} else {
-    				throw new IOException("Bad file format");
-    			}
-    		}
-    		br.close();
-    		
+    
+    		Scanner sr = new Scanner(restore);
+    		String xml = "";
+    		sr.next();
+    	    while (sr.hasNext()) {
+    	    	xml += sr.next();
+    	    }
+    	    
+    	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    	    DocumentBuilder db = null;
+    	    try {
+    	        db = dbf.newDocumentBuilder();
+    	        InputSource is = new InputSource();
+    	        is.setCharacterStream(new StringReader(xml));
+    	        try {
+    	            Document doc = db.parse(is);
+    	            Element KVStore = doc.getDocumentElement();
+    	            NodeList kvpairs = KVStore.getChildNodes();
+    	            for (int i = 0; i < kvpairs.getLength(); i++) {
+    	            	Node KVPair = kvpairs.item(i);
+    	            	String key = KVPair.getFirstChild().getTextContent();
+    	            	String value = KVPair.getLastChild().getTextContent();
+    	            	store.put(key,  value);
+    	            }
+    	            sr.close();
+    	        } catch (SAXException e) {
+    	        	sr.close();
+    	            throw new ParserConfigurationException();
+    	        }
+    	    } catch (ParserConfigurationException e) {
+    	        
+    	    }
     	} catch (IOException e) {
     		System.out.println("Restore failed.");
     	}
+    	
     }
 }
