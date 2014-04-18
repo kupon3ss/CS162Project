@@ -77,12 +77,18 @@ public class KVServer implements KeyValueInterface {
     		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
     	}
     	
-    	if (dataCache.get(key) != null) {
-    		return dataCache.get(key);
-    	} else {
-    		String value = dataStore.get(key); //Possible exception here
-    		dataCache.put(key, value);
-    		return dataCache.get(key);
+    	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
+    	lock.lock();
+    	try {
+	    	if (dataCache.get(key) != null) {
+	    		return dataCache.get(key);
+	    	} else {
+	    		String value = dataStore.get(key); //Possible exception here
+	    		dataCache.put(key, value);
+	    		return dataCache.get(key);
+	    	}
+    	} finally {
+    		lock.unlock();
     	}
     }
 
