@@ -47,6 +47,73 @@ public class KVServerTest {
             assertEquals(KVConstants.ERROR_NO_SUCH_KEY, e.getKVMessage().getMessage());
         }
     }
+    
+    @Test
+    public void invalidInput0() {
+        try {
+            server.get("");
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_KEY, e.getKVMessage().getMessage());
+        }
+    }
+    
+    @Test
+    public void invalidInput1() {
+        try {
+            server.get(null);
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_KEY, e.getKVMessage().getMessage());
+        }
+    }
+    
+    @Test
+    public void invalidInput2() {
+        try {
+            server.put("", "blah");
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_KEY, e.getKVMessage().getMessage());
+        }
+    }
+    
+    @Test
+    public void invalidInput3() {
+        try {
+            server.put(null, "blah");
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_KEY, e.getKVMessage().getMessage());
+        }
+    }
+    
+    @Test
+    public void invalidInput4() {
+        try {
+            server.put("blah", "");
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_VALUE, e.getKVMessage().getMessage());
+        }
+    }
+    
+    @Test
+    public void invalidInput5() {
+        try {
+            server.put("blah", null);
+            fail("This should error");
+        } catch (KVException e) {
+            assertEquals(KVConstants.RESP, e.getKVMessage().getMsgType());
+            assertEquals(KVConstants.ERROR_INVALID_VALUE, e.getKVMessage().getMessage());
+        }
+    }
+    
 
 
 }

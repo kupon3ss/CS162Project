@@ -43,11 +43,11 @@ public class KVServer implements KeyValueInterface {
     	if (key == null || key.length() == 0) {
     		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
     	} else if (key.length() >= MAX_KEY_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_KEY));
     	} else if (value == null || value.length() == 0) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_VALUE));
     	} else if (value.length() >= MAX_VAL_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_VALUE));
     	}
     	
     	
@@ -74,7 +74,7 @@ public class KVServer implements KeyValueInterface {
     	if (key == null || key.length() == 0) {
     		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
     	} else if (key.length() >= MAX_KEY_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
+    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_KEY));
     	}
     	
     	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
