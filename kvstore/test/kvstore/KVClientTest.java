@@ -27,8 +27,9 @@ public class KVClientTest {
 		}
 	}
 	
+	/*
 	@Before
-	private KVClient clientMockSocketSetup() {
+	public KVClient clientMockSocketSetup() {
 		//String hostname = InetAddress.getLocalHost().getHostAddress();
        	KVClient client = new KVClient(hostname, 8080) {
        		@Override
@@ -39,10 +40,17 @@ public class KVClientTest {
        	};
        	return client;
 	}
+	*/
 
     @Test(timeout = 20000)
     public void testInvalidKey() throws IOException {
-    	KVClient client = clientMockSocketSetup();
+    	KVClient client = new KVClient(hostname, 8080) {
+       		@Override
+       		protected Socket connectHost() throws KVException {
+       			Socket mockedSocket = mock(Socket.class);
+       			return mockedSocket;
+       		}
+       	};
         try {
             client.put("", "bar");
             fail("Didn't fail on empty key");
@@ -54,7 +62,13 @@ public class KVClientTest {
     
     @Test(timeout = 20000)
     public void testInvalidValue() {
-    	KVClient client = clientMockSocketSetup();
+    	KVClient client = new KVClient(hostname, 8080) {
+       		@Override
+       		protected Socket connectHost() throws KVException {
+       			Socket mockedSocket = mock(Socket.class);
+       			return mockedSocket;
+       		}
+       	};
     	try {
     		client.put("foo", "");
     		fail("Didn't fail on empty value");
@@ -70,6 +84,7 @@ public class KVClientTest {
     	
     }
     
+    /*
     //invoke a 'could not receive data' error
     @Test(timeout = 20000)
     public void testBadDReceive() {
@@ -79,7 +94,7 @@ public class KVClientTest {
     		protected Socket connectHost() throws KVException {
     			mockedSocket = mock(Socket.class);
     			try {
-	    			when(mockedSocket.getInputStream()).thenThrow(new KVException(ERROR_COULD_NOT_RECEIVE_DATA));
+	    			when(mockedSocket.getInputStream()).thenThrow(new IOException());
 	    			return mockedSocket;
     			} catch  (IOException ioe) {
     				throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
@@ -95,12 +110,15 @@ public class KVClientTest {
     		assertEquals(errorMsg, ERROR_COULD_NOT_RECEIVE_DATA);
     	}
     }
+    */
     
+    /*
     //invoke a 'could not send data' error
     @Test(timeout = 20000)
     public void testBadSend() {
     	
     }
+    */
     
     //invoke a 'could not create socket' error
     @Test(timeout = 20000)
@@ -141,9 +159,10 @@ public class KVClientTest {
     				throw new UnknownHostException();
     			} catch (UnknownHostException uhe) {
     				throw new KVException(ERROR_COULD_NOT_CONNECT);
-    			} catch (IOException ioe) {
-    				throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
     			}
+    			//} catch (IOException ioe) {
+    			//	throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
+    			//}
     		}
     	};
     	
