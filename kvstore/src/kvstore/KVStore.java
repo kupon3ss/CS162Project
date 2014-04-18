@@ -26,6 +26,7 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.io.StringWriter;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -184,20 +185,10 @@ public class KVStore implements KeyValueInterface {
         resetStore();
         File restore = new File(fileName);
     	try {
-    
-    		Scanner sr = new Scanner(restore);
-    		String xml = "";
-
-    	    while (sr.hasNext()) {
-    	    	xml += sr.next();
-    	    }
-    	    //System.out.println(xml);
     	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     	    DocumentBuilder db = null;
     	    try {
     	        db = dbf.newDocumentBuilder();
-    	        InputSource is = new InputSource();
-    	        is.setCharacterStream(new StringReader(xml));
     	        try {
     	            Document doc = db.parse(restore);
     	            Element KVStore = doc.getDocumentElement();
@@ -208,17 +199,13 @@ public class KVStore implements KeyValueInterface {
     	            	String value = KVPair.getLastChild().getTextContent();
     	            	store.put(key,  value);
     	            }
-    	            sr.close();
-    	        } catch (SAXException e) {
-    	        	sr.close();
-    	        	//System.out.println("SAX failed");
-    	            throw new ParserConfigurationException();
+    	        } catch (Exception e) {
+    	        	throw new Exception();
     	        }
-    	    } catch (ParserConfigurationException e) {
-    	    	//System.out.println("Parser failed");
-    	        throw new IOException();
+    	    } catch (Exception e) {
+    	    	throw new Exception();
     	    }
-    	} catch (IOException e) {
+    	} catch (Exception e) {
     		System.out.println("Restore failed.");
     	}
     	
