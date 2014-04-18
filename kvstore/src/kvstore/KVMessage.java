@@ -51,7 +51,7 @@ public class KVMessage implements Serializable {
      */
     public KVMessage(String msgType) throws KVException {
         if (!msgTypes.contains(msgType)){
-        	throw new KVException("ERROR_INVALID_FORMAT");
+        	throw new KVException(ERROR_INVALID_FORMAT);
         }
         else {
         	this.msgType = msgType;
@@ -110,10 +110,11 @@ public class KVMessage implements Serializable {
 		} catch (SAXException e) {
 			throw new KVException(ERROR_INVALID_FORMAT);
 		} catch (IOException e) {
-			throw new KVException(ERROR_COULD_NOT_CONNECT);
+			throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
 		} catch (ParserConfigurationException e) {
 			throw new KVException(ERROR_PARSER);
 		}
+    		
 		Element root = document.getDocumentElement();
 		NodeList elements = root.getChildNodes();
 
@@ -179,32 +180,43 @@ public class KVMessage implements Serializable {
     }
     
     
-    public Boolean formatCheck(){
-    	if (!msgTypes.contains(this.msgType)){
-    		return false;
-    	}
-    	if (this.msgType.equals(GET_REQ)){
-    		if (this.key.isEmpty()){
-    			return false;
-    		}
-    		if (this.value.isEmpty()){
-    			return false;
-    		}
+    public void formatCheck() throws KVException{
+    	if (msgTypes.contains(this.msgType)){
+    		throw new KVException (ERROR_INVALID_FORMAT);
     	}
     	if (this.msgType.equals(PUT_REQ)){
     		if (this.key.isEmpty()){
-    			return false;
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
+    		if ((this.key.length() > 256)){
+    			throw new KVException (ERROR_OVERSIZED_KEY);
+    		}
+    		if (this.value.isEmpty()){
+    			throw new KVException (ERROR_INVALID_VALUE);
+    		}
+    		if (this.value.length() > 1024*256){
+    			throw new KVException (ERROR_OVERSIZED_VALUE);
+    		}
+    	}
+    	if (this.msgType.equals(GET_REQ)){
+    		if (this.key.isEmpty()){
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
+    		if ((this.key.length() > 256)){
+    			throw new KVException (ERROR_OVERSIZED_KEY);
     		}
     	}
     	if (this.msgType.equals(DEL_REQ)){
     		if (this.key.isEmpty()){
-    			return false;
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
+    		if ((this.key.length() > 256)){
+    			throw new KVException (ERROR_OVERSIZED_KEY);
     		}
     	}
     	if (this.msgType.equals(RESP)){
     		
     	}
-    	return true;
     }
     
     /**
@@ -277,16 +289,28 @@ public class KVMessage implements Serializable {
 	    }
 	    //not sure how to bulletproof the responses
 	    if (this.msgType.equals(RESP)){
-	    	Element xmlkey = xmldoc.createElement("Key");
-			xmlkey.appendChild(xmldoc.createTextNode(this.key));
-			Element xmlval = xmldoc.createElement("Value");
-			xmlval.appendChild(xmldoc.createTextNode(this.value));	
-			Element xmlmessage = xmldoc.createElement("Message");
-			xmlval.appendChild(xmldoc.createTextNode(this.message));	
-			xmlroot.appendChild(xmlkey);
-			xmlroot.appendChild(xmlval);
-			xmlroot.appendChild(xmlmessage);
-	    } 
+    		if (this.key != null){
+	    	if (!this.key.isEmpty()){
+		    	Element xmlkey = xmldoc.createElement("Key");
+				xmlkey.appendChild(xmldoc.createTextNode(this.key));
+				xmlroot.appendChild(xmlkey);
+	    	}
+    		}
+	    	if (this.value != null){
+	    	if (!this.value.isEmpty()){
+				Element xmlval = xmldoc.createElement("Value");
+				xmlval.appendChild(xmldoc.createTextNode(this.value));	
+				xmlroot.appendChild(xmlval);
+	    	}
+	    	}
+	    	if (this.message != null){
+	    	if (!this.message.isEmpty()){
+				Element xmlmsg = xmldoc.createElement("Message");
+				xmlmsg.appendChild(xmldoc.createTextNode(this.message));	
+				xmlroot.appendChild(xmlmsg);
+	    	}
+	    	}
+	    }
 	    
 	    Transformer transformer = null;
 	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -306,8 +330,7 @@ public class KVMessage implements Serializable {
 		} catch (TransformerException e) {
 			throw new KVException (ERROR_INVALID_FORMAT);
 		}
-		
-        return xmlout.toString();
+        return xmlwriter.toString();
     }
 
 

@@ -13,6 +13,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.junit.*;
 import org.xml.sax.SAXException;
+
+
 public class KVMessageTest {
 
     private Socket sock;
@@ -20,7 +22,7 @@ public class KVMessageTest {
     private static final String TEST_INPUT_DIR = "test/kvstore/test-inputs/";
 
     @Test
-    public void successfullyParsesPutReq() throws KVException, IOException, ParserConfigurationException, SAXException {
+    public void successfullyParsesPutReq() throws KVException {
         setupSocket("putreq.txt");
         KVMessage kvm = new KVMessage(sock);
         assertNotNull(kvm);
@@ -31,7 +33,7 @@ public class KVMessageTest {
     }
 
     @Test
-    public void successfullyParsesPutResp() throws KVException, IOException, ParserConfigurationException, SAXException {
+    public void successfullyParsesPutResp() throws KVException {
         setupSocket("putresp.txt");
         KVMessage kvm = new KVMessage(sock);
         assertNotNull(kvm);
@@ -52,9 +54,42 @@ public class KVMessageTest {
     	try {
 			KVMessage kvm3 = new KVMessage("whateveryo");
 		} catch (KVException e) {
-			System.out.print(e.getKVMessage());
+			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
 		}
     }
+    
+    @Test
+    public void basictoXMLtest() throws KVException{
+        setupSocket("putreq.txt");
+        KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();        
+        System.out.println(xmlout);
+        String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"putreq\"><Key>key</Key></KVMessage>");
+        assertEquals(xmlout, sampleXML);
+    }
+ 
+    @Test
+    public void basictoXMLtest2() throws KVException{
+        setupSocket("resp.txt");
+        KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();        
+        System.out.println(xmlout);
+        String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"resp\"><Key>key</Key><Value>value</Value></KVMessage>");
+        assertEquals(xmlout, sampleXML);
+    }
+ 
+    /*
+    @Test
+    public void basicSendRecieve() throws KVException{
+        setupSocket("putreq.txt");
+        KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();
+        Socket sock2 = new Socket();
+        kvm.sendMessage(sock);
+        KVMessage kvm2 = new KVMessage(sock);
+        System.out.print(kvm2.toXML());
+    }
+    */
 
     /* Begin helper methods */
 
