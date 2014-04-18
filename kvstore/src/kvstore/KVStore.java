@@ -185,6 +185,9 @@ public class KVStore implements KeyValueInterface {
         resetStore();
         File restore = new File(fileName);
     	try {
+    		if (!restore.exists()) {
+    			throw new Exception();
+    		}
     	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     	    DocumentBuilder db = null;
     	    try {
