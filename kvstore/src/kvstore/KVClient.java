@@ -67,8 +67,8 @@ public class KVClient implements KeyValueInterface {
     public void put(String key, String value) throws KVException {
     	Socket sock = null;
     	try {
-    		if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
-    		if(value == "" || value == null) throw new KVException(ERROR_INVALID_VALUE);
+    		if(key.equals("") || key == null) throw new KVException(ERROR_INVALID_KEY);
+    		if(value.equals("") || value == null) throw new KVException(ERROR_INVALID_VALUE);
     		
     		sock = connectHost();
 
@@ -81,9 +81,10 @@ public class KVClient implements KeyValueInterface {
     		String message = inMsg.getMessage();
     		//assertTrue(message != null);
     		if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
-    		if( message != SUCCESS) throw new KVException(message);
+    		if(!message.equals(SUCCESS)) throw new KVException(message);
     		
     	} catch (KVException kve) {
+    		System.out.println(kve.getKVMessage().getMessage());
     		throw kve;
     	} finally {
     		if(sock != null) closeHost(sock);
@@ -113,11 +114,12 @@ public class KVClient implements KeyValueInterface {
         	String message  = inMsg.getMessage();
         	
         	if(message != null) throw new KVException(message);
-        	//Confirm that we got the right key back
-        	if(inMsg.getKey() != key) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
+        	//Confirm that we got the right key back - I'm not sure we really have to do this
+        	//if(!inMsg.getKey().equals(key)) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
         	toReturn = inMsg.getValue();
 
         } catch (KVException kve) {
+        	System.out.println(kve.getKVMessage().getMessage());
         	throw kve;
         } finally {
         	if(sock != null) closeHost(sock);
@@ -146,7 +148,7 @@ public class KVClient implements KeyValueInterface {
         	KVMessage inMsg = new KVMessage(sock);
         	String message = inMsg.getMessage();
         	if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
-        	if(message != SUCCESS) throw new KVException(message);
+        	if(!message.equals(SUCCESS)) throw new KVException(message);
 
         } catch (KVException kve) {
         	throw kve;
