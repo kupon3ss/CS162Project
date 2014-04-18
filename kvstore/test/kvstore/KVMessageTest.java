@@ -63,7 +63,7 @@ public class KVMessageTest {
         setupSocket("putreq.txt");
         KVMessage kvm = new KVMessage(sock);
         String xmlout = kvm.toXML();        
-        System.out.println(xmlout);
+        //System.out.println(xmlout);
         String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"putreq\"><Key>key</Key></KVMessage>");
         assertEquals(xmlout, sampleXML);
     }
@@ -73,7 +73,7 @@ public class KVMessageTest {
         setupSocket("resp.txt");
         KVMessage kvm = new KVMessage(sock);
         String xmlout = kvm.toXML();        
-        System.out.println(xmlout);
+        //System.out.println(xmlout);
         String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"resp\"><Key>key</Key><Value>value</Value></KVMessage>");
         assertEquals(xmlout, sampleXML);
     }

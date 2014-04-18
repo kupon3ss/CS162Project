@@ -176,20 +176,27 @@ public class KVMessage implements Serializable {
     	
     	
 		
-    
+    	
     }
     
-    
+ /*  Probably dont need this, can be used in KVServer  
+  * 
     public void formatCheck() throws KVException{
     	if (msgTypes.contains(this.msgType)){
     		throw new KVException (ERROR_INVALID_FORMAT);
     	}
     	if (this.msgType.equals(PUT_REQ)){
+    		if (this.key != null){
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
     		if (this.key.isEmpty()){
     			throw new KVException (ERROR_INVALID_KEY);
     		}
     		if ((this.key.length() > 256)){
     			throw new KVException (ERROR_OVERSIZED_KEY);
+    		}
+    		if (this.value != null){
+    			throw new KVException (ERROR_INVALID_KEY);
     		}
     		if (this.value.isEmpty()){
     			throw new KVException (ERROR_INVALID_VALUE);
@@ -199,6 +206,9 @@ public class KVMessage implements Serializable {
     		}
     	}
     	if (this.msgType.equals(GET_REQ)){
+    		if (this.key != null){
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
     		if (this.key.isEmpty()){
     			throw new KVException (ERROR_INVALID_KEY);
     		}
@@ -207,6 +217,9 @@ public class KVMessage implements Serializable {
     		}
     	}
     	if (this.msgType.equals(DEL_REQ)){
+    		if (this.key != null){
+    			throw new KVException (ERROR_INVALID_KEY);
+    		}
     		if (this.key.isEmpty()){
     			throw new KVException (ERROR_INVALID_KEY);
     		}
@@ -218,6 +231,8 @@ public class KVMessage implements Serializable {
     		
     	}
     }
+    
+    */
     
     /**
      * Generate the serialized XML representation for this message. See
