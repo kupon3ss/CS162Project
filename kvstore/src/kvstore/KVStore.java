@@ -187,11 +187,11 @@ public class KVStore implements KeyValueInterface {
     
     		Scanner sr = new Scanner(restore);
     		String xml = "";
-    		sr.next();
+
     	    while (sr.hasNext()) {
     	    	xml += sr.next();
     	    }
-    	    
+    	    System.out.println(xml);
     	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     	    DocumentBuilder db = null;
     	    try {
@@ -199,7 +199,7 @@ public class KVStore implements KeyValueInterface {
     	        InputSource is = new InputSource();
     	        is.setCharacterStream(new StringReader(xml));
     	        try {
-    	            Document doc = db.parse(is);
+    	            Document doc = db.parse(restore);
     	            Element KVStore = doc.getDocumentElement();
     	            NodeList kvpairs = KVStore.getChildNodes();
     	            for (int i = 0; i < kvpairs.getLength(); i++) {
@@ -211,10 +211,12 @@ public class KVStore implements KeyValueInterface {
     	            sr.close();
     	        } catch (SAXException e) {
     	        	sr.close();
+    	        	//System.out.println("SAX failed");
     	            throw new ParserConfigurationException();
     	        }
     	    } catch (ParserConfigurationException e) {
-    	        
+    	    	//System.out.println("Parser failed");
+    	        throw new IOException();
     	    }
     	} catch (IOException e) {
     		System.out.println("Restore failed.");

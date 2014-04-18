@@ -30,8 +30,11 @@ public class KVStoreTest {
         
         store.dumpToFile("test0");
         store.restoreFromFile("test0");
+        //System.out.println(store.toString());
         
-        //assertEquals(val, store.get(key));
+        //System.out.println(store.toString());
+        
+        assertEquals(val, store.get(key));
     }
     
     @Test
@@ -44,11 +47,12 @@ public class KVStoreTest {
         
         store.dumpToFile("test1");
         store.restoreFromFile("test1");
+        System.out.println(store.toString());
         
-        //assertEquals("one", store.get("1"));
-        //assertEquals("two", store.get("2"));
-        //assertEquals("three", store.get("3"));
-        //assertEquals("four", store.get("4"));
+        assertEquals("one", store.get("1"));
+        assertEquals("two", store.get("2"));
+        assertEquals("three", store.get("3"));
+        assertEquals("four", store.get("4"));
     }
 
 }
