@@ -8,6 +8,12 @@ import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import java.io.File;
 import java.io.BufferedWriter;
@@ -16,6 +22,8 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+
+import java.io.StringWriter;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -109,7 +117,24 @@ public class KVStore implements KeyValueInterface {
     			root.appendChild(pair);
     		}
     		xmlDoc.appendChild(root);
-    		return xmlDoc.getXmlEncoding();
+    		
+    		Transformer transformer = null;
+    	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    		try {
+    			transformer = transformerFactory.newTransformer();
+    		} catch (TransformerConfigurationException e) {
+    		}
+    		
+    		StringWriter xmlwriter = new StringWriter();
+    		DOMSource source = new DOMSource(xmlDoc);
+    		StreamResult xmlout = new StreamResult(xmlwriter);
+    		
+    		try {
+    			transformer.transform(source, xmlout);
+    		} catch (TransformerException e) {
+    		}
+    		
+    		return xmlwriter.toString();
     	} catch (ParserConfigurationException e) {
     		return null;
     	}
