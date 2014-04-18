@@ -117,7 +117,41 @@ public class KVMessageTest {
     }
     
     
+    @Test
+    public void noSocketTest() throws KVException{
+    	try{
+        sock = mock(Socket.class);
+    	KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();        
+    	}
+    	catch (KVException e) {
+    		//System.out.println(e.getKVMessage().getMessage());
+			assertEquals(ERROR_COULD_NOT_CREATE_SOCKET, e.getKVMessage().getMessage());
+			return;
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
     
+    @Test
+    public void NoOpenSocket() throws KVException, IOException{
+    	try{
+    	Socket sock = null;
+    	sock = new Socket();
+    	sock.close();
+    	System.out.print(sock.isClosed());
+    	KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();  
+        System.out.println(xmlout);
+    	}
+    	catch (KVException e) {
+    		//System.out.println(e.getKVMessage().getMessage());
+			assertEquals(ERROR_COULD_NOT_RECEIVE_DATA, e.getKVMessage().getMessage());
+			return;
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
     
     @Test
     public void basictoXMLtest() throws KVException{

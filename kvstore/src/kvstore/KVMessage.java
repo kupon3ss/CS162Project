@@ -110,15 +110,18 @@ public class KVMessage implements Serializable {
 	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	        DocumentBuilder builder;
 			builder = factory.newDocumentBuilder();
-			document = builder.parse(OpenStream);			
-		} catch (SAXException e) {
+			document = builder.parse(OpenStream);
+
+    	} catch (SAXException e) {
 			throw new KVException(ERROR_INVALID_FORMAT);
 		} catch (IOException e) {
 			throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
 		} catch (ParserConfigurationException e) {
 			throw new KVException(ERROR_PARSER);
+		} catch (NullPointerException e){
+			throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
 		}
-    		
+    	
 		Element root = document.getDocumentElement();
 		NodeList elements = root.getChildNodes();
 
