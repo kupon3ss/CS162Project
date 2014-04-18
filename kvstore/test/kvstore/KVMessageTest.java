@@ -110,6 +110,7 @@ public class KVMessageTest {
 
 		} catch (KVException e) {
 			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+			return;
 		}
     	//error should be caught
     	assertTrue(false);
@@ -123,7 +124,7 @@ public class KVMessageTest {
         setupSocket("putreq.txt");
         KVMessage kvm = new KVMessage(sock);
         String xmlout = kvm.toXML();        
-        System.out.println(xmlout);
+        //System.out.println(xmlout);
         String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"putreq\"><Key>key</Key><Value>value</Value></KVMessage>");
         assertEquals(xmlout, sampleXML);
     }

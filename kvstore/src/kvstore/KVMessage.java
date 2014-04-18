@@ -31,6 +31,10 @@ public class KVMessage implements Serializable {
     
     public static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP };
     private static final Set<String> msgTypes = new HashSet<String>(Arrays.asList(SET_TYPES));
+    
+    public static final String[] ELEMENT_TYPES = new String[] { "Value", "Key", "Message", "#text" };
+    private static final Set<String> eleTypes = new HashSet<String>(Arrays.asList(ELEMENT_TYPES));
+    
     private static NoCloseInputStream OpenStream;
 
     public static final long serialVersionUID = 6473128480951955693L;
@@ -125,8 +129,14 @@ public class KVMessage implements Serializable {
     	if (root.getAttribute("type").equals(PUT_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
+
     			Node element = elements.item(i);
     			String elementtype = element.getNodeName();
+    			//check that its an acceptable field
+    			if (!eleTypes.contains(elementtype)){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    	    	}
+    			
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
                 } else if (elementtype.equals("Value")) {
@@ -136,12 +146,21 @@ public class KVMessage implements Serializable {
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
+    		if (this.key == null || this.key == "" || this.value == null || this.value == ""){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    			}
     	}
     	if (root.getAttribute("type").equals(GET_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
     			String elementtype = element.getNodeName();
+    			
+    			//check that its an acceptable field
+    			if (!eleTypes.contains(elementtype)){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    	    	}
+    			
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
                 }
@@ -149,12 +168,21 @@ public class KVMessage implements Serializable {
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
+    		if (this.key == null || this.key == ""){
+				throw new KVException(ERROR_INVALID_FORMAT);
+			}
     	}
     	if (root.getAttribute("type").equals(DEL_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
     			String elementtype = element.getNodeName();
+    			
+    			//check that its an acceptable field
+    			if (!eleTypes.contains(elementtype)){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    	    	}
+    			
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
                 }
@@ -162,6 +190,9 @@ public class KVMessage implements Serializable {
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
+    		if (this.key == null || this.key == ""){
+				throw new KVException(ERROR_INVALID_FORMAT);
+			}
     	}
     	// need a check and bulletproofing here
    
@@ -170,6 +201,12 @@ public class KVMessage implements Serializable {
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
     			String elementtype = element.getNodeName();
+    			
+    			//check that its an acceptable field
+    			if (!eleTypes.contains(elementtype)){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    	    	}
+    			
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
                 } 
@@ -179,7 +216,7 @@ public class KVMessage implements Serializable {
                 else if (elementtype.equals("Message")) {
                 	this.message = element.getTextContent();
                 }
-                
+                //System.out.println(elementtype);
     		}
     		if (this.message != null){
     			if (this.key != null || this.value != null){
@@ -377,9 +414,9 @@ public class KVMessage implements Serializable {
     public void sendMessage(Socket sock) throws KVException {
         // implement me
     	try {
-			String message = this.toXML();
+			String xmlmessage = this.toXML();
 			PrintWriter socketout = new PrintWriter(sock.getOutputStream(), true);
-			socketout.print(message);
+			socketout.print(xmlmessage);
 			socketout.flush();
 			sock.shutdownOutput();
 		} catch (IOException e) {
