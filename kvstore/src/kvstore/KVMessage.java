@@ -132,6 +132,9 @@ public class KVMessage implements Serializable {
                 } else if (elementtype.equals("Value")) {
                 	this.value = element.getTextContent();
                 }
+                else if (elementtype.equals("Message")){
+        			throw new KVException(ERROR_INVALID_FORMAT);
+                }
     		}
     	}
     	if (root.getAttribute("type").equals(GET_REQ)){
@@ -142,6 +145,9 @@ public class KVMessage implements Serializable {
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
                 }
+                else if (elementtype.equals("Value")||elementtype.equals("Message")){
+        			throw new KVException(ERROR_INVALID_FORMAT);
+                }
     		}
     	}
     	if (root.getAttribute("type").equals(DEL_REQ)){
@@ -151,6 +157,9 @@ public class KVMessage implements Serializable {
     			String elementtype = element.getNodeName();
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
+                }
+                else if (elementtype.equals("Value")||elementtype.equals("Message")){
+        			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
     	}
@@ -171,6 +180,11 @@ public class KVMessage implements Serializable {
                 	this.message = element.getTextContent();
                 }
                 
+    		}
+    		if (this.message != null){
+    			if (this.key != null || this.value != null){
+    				throw new KVException(ERROR_INVALID_FORMAT);
+    			}
     		}
     	} 
     	
@@ -284,7 +298,7 @@ public class KVMessage implements Serializable {
 	     if (!msgTypes.contains(this.msgType)){
 
 	     }
-	    if (this.msgType.equals(GET_REQ)){
+	    if (this.msgType.equals(PUT_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			Element xmlval = xmldoc.createElement("Value");
@@ -292,7 +306,7 @@ public class KVMessage implements Serializable {
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 	    }
-	    if (this.msgType.equals(PUT_REQ)){
+	    if (this.msgType.equals(GET_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);

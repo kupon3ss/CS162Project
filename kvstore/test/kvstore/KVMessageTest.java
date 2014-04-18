@@ -55,16 +55,76 @@ public class KVMessageTest {
 			KVMessage kvm3 = new KVMessage("whateveryo");
 		} catch (KVException e) {
 			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+			return;
 		}
+    	//error should be caught
+    	assertTrue(false);
     }
+    
+    @Test
+    public void constructorInvalidTest() throws KVException{
+    	try{
+        setupSocket("badformat.txt");
+        KVMessage kvm = new KVMessage(sock);
+		} catch (KVException e) {
+			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+			return;
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
+    
+    @Test
+    public void constructorNoTypeTest() throws KVException{
+    	try{
+        setupSocket("notype.txt");
+        KVMessage kvm = new KVMessage(sock);
+		} catch (KVException e) {
+			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+			return;
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
+    
+    @Test
+    public void constructorNoKeyTest() throws KVException{
+    	try{
+        setupSocket("nokey.txt");
+        KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();        
+		} catch (KVException e) {
+			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+			return;
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
+    
+    @Test
+    public void constructorTooManyFieldsTest() throws KVException{
+    	try{
+        setupSocket("toomanyfields.txt");
+        KVMessage kvm = new KVMessage(sock);
+        String xmlout = kvm.toXML();        
+
+		} catch (KVException e) {
+			assertEquals(ERROR_INVALID_FORMAT, e.getKVMessage().getMessage());
+		}
+    	//error should be caught
+    	assertTrue(false);
+    }
+    
+    
+    
     
     @Test
     public void basictoXMLtest() throws KVException{
         setupSocket("putreq.txt");
         KVMessage kvm = new KVMessage(sock);
         String xmlout = kvm.toXML();        
-        //System.out.println(xmlout);
-        String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"putreq\"><Key>key</Key></KVMessage>");
+        System.out.println(xmlout);
+        String sampleXML = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?><KVMessage type=\"putreq\"><Key>key</Key><Value>value</Value></KVMessage>");
         assertEquals(xmlout, sampleXML);
     }
  
