@@ -103,7 +103,7 @@ public class ThreadPool {
             Thread job;
             while (true) {
                 // get a job (unless blocked) and execute it
-                job = new Thread(threadPool.getJob());
+                job = (Thread)(threadPool.getJob());
                 job.start();
                 // wait for job to finish before fetching a new one
                 try {
