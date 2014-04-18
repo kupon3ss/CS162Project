@@ -103,7 +103,11 @@ public class ThreadPool {
             Thread job;
             while (true) {
                 // get a job (unless blocked) and execute it
-                job = (Thread)(threadPool.getJob());
+                try {
+                    job = (Thread) threadPool.getJob(); //for junit tests (Threads), so they can call join
+                } catch (ClassCastException cce) {
+                    job = new Thread(threadPool.getJob()); // for other runnables (ClientHandler)
+                }
                 job.start();
                 // wait for job to finish before fetching a new one
                 try {
