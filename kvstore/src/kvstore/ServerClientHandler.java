@@ -75,7 +75,7 @@ public class ServerClientHandler implements NetworkHandler {
             try {
                 KVMessage mess = new KVMessage(client);
                 String request = mess.getMsgType();
-                response = new KVMessage(RESP, "success");
+                response = new KVMessage(RESP, SUCCESS);
                 if (request.equals(PUT_REQ))
                     kvServer.put(mess.getKey(), mess.getValue());
                 else if (request.equals(DEL_REQ))

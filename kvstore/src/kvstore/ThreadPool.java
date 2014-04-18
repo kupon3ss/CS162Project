@@ -67,7 +67,7 @@ public class ThreadPool {
      * (does not throw) InterruptedException if thread is interrupted while in blocked
      *         state. Your implementation may or may not actually throw this.
      */
-    public Runnable getJob() {//throws InterruptedException {
+    private Runnable getJob() {//throws InterruptedException {
         // implement me
         jobsLock.lock();
         while (jobQueue.isEmpty()) {
@@ -108,10 +108,12 @@ public class ThreadPool {
                 // wait for job to finish before fetching a new one
                 try {
                     job.join();
-                } catch (InterruptedException e) {
-                    // if the thread was interrupted, just get the next one
-                }
+                } catch (InterruptedException e) {}
+                // if the thread was interrupted, just get the next one
             }
         }
+
     }
+
+
 }
