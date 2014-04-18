@@ -191,7 +191,7 @@ public class KVStore implements KeyValueInterface {
     	    while (sr.hasNext()) {
     	    	xml += sr.next();
     	    }
-    	    System.out.println(xml);
+    	    //System.out.println(xml);
     	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     	    DocumentBuilder db = null;
     	    try {

@@ -47,7 +47,19 @@ public class KVStoreTest {
         
         store.dumpToFile("test1");
         store.restoreFromFile("test1");
-        System.out.println(store.toString());
+        //System.out.println(store.toString());
+        
+        assertEquals("one", store.get("1"));
+        assertEquals("two", store.get("2"));
+        assertEquals("three", store.get("3"));
+        assertEquals("four", store.get("4"));
+    }
+    
+    @Test
+    public void dumpAndRestore2() throws KVException {
+
+        store.restoreFromFile("test1");
+        //System.out.println(store.toString());
         
         assertEquals("one", store.get("1"));
         assertEquals("two", store.get("2"));
