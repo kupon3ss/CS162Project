@@ -156,6 +156,24 @@ public class KVStore implements KeyValueInterface {
     	try {
     		BufferedReader br = new BufferedReader(new FileReader(restore.getAbsolutePath()));
     		
+    		String line = br.readLine(); //<?xml version="1.0" encoding="UTF-8"?>
+    		line = br.readLine(); //<KVStore>
+    		line = br.readLine();
+    		while (line != null) {
+    			if (line == "</KVStore>") {
+    				break;
+    			} else if (line == "<Key>") {
+    				String key = br.readLine(); //key
+    				br.readLine(); //</Key>
+    				br.readLine(); //<Value>
+    				String value = br.readLine();//value 
+    				store.put(key, value);
+    				br.readLine();//</Value>
+    				line = br.readLine();
+    			} else {
+    				throw new IOException("Bad file format");
+    			}
+    		}
     		br.close();
     		
     	} catch (IOException e) {
