@@ -226,6 +226,10 @@ public class KVMessage implements Serializable {
     				throw new KVException(ERROR_INVALID_FORMAT);
     			}
     		}
+    		else if (this.key == null || this.value == null){ 
+				throw new KVException(ERROR_INVALID_FORMAT);
+
+    		}
     	} 
     	
     	

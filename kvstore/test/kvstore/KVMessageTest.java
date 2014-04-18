@@ -139,7 +139,7 @@ public class KVMessageTest {
     	Socket sock = null;
     	sock = new Socket();
     	sock.close();
-    	System.out.print(sock.isClosed());
+    	//System.out.print(sock.isClosed());
     	KVMessage kvm = new KVMessage(sock);
         String xmlout = kvm.toXML();  
         System.out.println(xmlout);
