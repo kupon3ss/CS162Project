@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.*;
 
@@ -186,8 +190,25 @@ public class KVCache implements KeyValueInterface {
     			root.appendChild(setXML);
     		}
     		xmlDoc.appendChild(root);
+    		
+    		Transformer transformer = null;
+    	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    		try {
+    			transformer = transformerFactory.newTransformer();
+    		} catch (TransformerConfigurationException e) {
+    		}
+    		
+    		StringWriter xmlwriter = new StringWriter();
+    		DOMSource source = new DOMSource(xmlDoc);
+    		StreamResult xmlout = new StreamResult(xmlwriter);
+    		
+    		try {
+    			transformer.transform(source, xmlout);
+    		} catch (TransformerException e) {
+    		}
+    		
     		xmlDoc.setXmlStandalone(true);
-    		return xmlDoc.toString();
+    		return xmlwriter.toString();
     	} catch (ParserConfigurationException e) {
     		return null;
     	}
