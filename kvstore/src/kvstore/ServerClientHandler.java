@@ -80,8 +80,10 @@ public class ServerClientHandler implements NetworkHandler {
                     kvServer.put(mess.getKey(), mess.getValue());
                 else if (request.equals(DEL_REQ))
                     kvServer.del(mess.getKey());
-                else if (request.equals(GET_REQ))
+                else if (request.equals(GET_REQ)) {
                     response.setValue(kvServer.get(mess.getKey()));
+                    response.setKey(mess.getKey());
+                }
                 else
                     throw new KVException("Invalid request");
             } catch (KVException kve) {

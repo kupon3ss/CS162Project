@@ -63,6 +63,7 @@ public class ThreadPool {
 
     /**
      * Block until a job is present in the queue and retrieve the job
+     *
      * @return A runnable task that has to be executed
      * (does not throw) InterruptedException if thread is interrupted while in blocked
      *         state. Your implementation may or may not actually throw this.
@@ -103,11 +104,12 @@ public class ThreadPool {
             Thread job;
             while (true) {
                 // get a job (unless blocked) and execute it
-                try {
+               /* try {
                     job = (Thread) threadPool.getJob(); //for junit tests (Threads), so they can call join
                 } catch (ClassCastException cce) {
                     job = new Thread(threadPool.getJob()); // for other runnables (ClientHandler)
-                }
+                }*/
+                job = new Thread(threadPool.getJob());
                 job.start();
                 // wait for job to finish before fetching a new one
                 try {
