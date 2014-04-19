@@ -81,6 +81,7 @@ public class ServerClientHandler implements NetworkHandler {
                 else if (request.equals(DEL_REQ))
                     kvServer.del(mess.getKey());
                 else if (request.equals(GET_REQ)) {
+                	response = new KVMessage(RESP);
                     response.setValue(kvServer.get(mess.getKey()));
                     response.setKey(mess.getKey());
                 }
