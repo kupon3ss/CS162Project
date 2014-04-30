@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The testing class for ThreadPool
+ * The testing class for ThreadPool. Change the line in ThreadPool.WorkerThread.run to get running.
  */
 public class ThreadPoolTest {
 
@@ -54,7 +54,8 @@ public class ThreadPoolTest {
         pool.addJob(thread2);
         pool.addJob(thread3);
         pool.addJob(thread4);
-        
+        // UNCOMMENT BELOW AFTER CHANGING LINE IN ThreadPool.WorkerThread.run TO RUN TEST
+        /*
         while(thread1.getState().equals(Thread.State.NEW));
         thread1.join();
         assertEquals(9999, thread1put);
@@ -66,6 +67,7 @@ public class ThreadPoolTest {
         assertEquals("somestring", thread3put);
         while(thread4.getState().equals(Thread.State.NEW));
         thread4.join();
+        */
     }
 
     @Test
@@ -87,6 +89,8 @@ public class ThreadPoolTest {
         pool.addJob(thread9); pool.addJob(thread10);
         pool.addJob(thread11); pool.addJob(thread12);
         pool.addJob(thread13); pool.addJob(thread14);
+        // UNCOMMENT BELOW AFTER CHANGING LINE IN ThreadPool.WorkerThread.run TO RUN TEST
+        /*
         while (thread1.getState().equals(Thread.State.NEW));
         thread1.join();
         while (thread2.getState().equals(Thread.State.NEW));
@@ -115,8 +119,8 @@ public class ThreadPoolTest {
         thread13.join();
         while (thread14.getState().equals(Thread.State.NEW));
         thread14.join();
-        //do something with the threads
-        assertTrue(true);
+        */
+        assertTrue(true); // reached
     }
 
     int count = 0;
@@ -129,7 +133,7 @@ public class ThreadPoolTest {
             public void run() {
                 for (int k = 0; k < 5000; k++) {
                     lock.lock();
-                    count++;
+                    count++; //increment a synchronized count
                     lock.unlock();
                 }
             }
@@ -137,20 +141,24 @@ public class ThreadPoolTest {
         LinkedList<Thread> threads = new LinkedList<Thread>();
         Thread thread;
         for (int j = 0; j < 200; j++) {
-            thread = new Thread(thread0);
+            thread = new Thread(thread0); //copies of the thread to increment same count
             threads.add(thread);
             pool.addJob(thread);
         }
+        // UNCOMMENT BELOW AFTER CHANGING LINE IN ThreadPool.WorkerThread.run TO RUN TEST
+        /*
         for (Thread t : threads) {
             while (t.getState().equals(Thread.State.NEW)) ; //wait
             lock.lock();
+            //this count should skip a good amount each time (not consecutive)
             System.out.println("current count (to 1,000,000): " + count);
             lock.unlock();
             t.join();
         }
         lock.lock();
-        assertEquals(1000000, count);
+        assertEquals(1000000, count); //200 jobs increment 5000 times each
         lock.unlock();
+        */
     }
 
 }

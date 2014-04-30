@@ -35,15 +35,6 @@ public class ThreadPool {
         }
     }
 
-    /*public void startThreads() {
-        for (Thread worker : threads)
-            worker.start();
-    }
-    public void interruptThreads() {
-        for (Thread worker : threads)
-            worker.interrupt();
-    }*/
-
     /**
      * Add a job to the queue of jobs that have to be executed. As soon as a
      * thread is free, the thread will retrieve a job from this queue if
@@ -104,12 +95,8 @@ public class ThreadPool {
             Thread job;
             while (true) {
                 // get a job (unless blocked) and execute it
-               /* try {
-                    job = (Thread) threadPool.getJob(); //for junit tests (Threads), so they can call join
-                } catch (ClassCastException cce) {
-                    job = new Thread(threadPool.getJob()); // for other runnables (ClientHandler)
-                }*/
-                job = new Thread(threadPool.getJob());
+                job = new Thread(threadPool.getJob()); //change to below line to run ThreadPoolTest
+                // job = (Thread) threadPool.getJob();
                 job.start();
                 // wait for job to finish before fetching a new one
                 try {
@@ -121,5 +108,13 @@ public class ThreadPool {
 
     }
 
+    /*public void startThreads() {
+        for (Thread worker : threads)
+            worker.start();
+    }
+    public void interruptThreads() {
+        for (Thread worker : threads)
+            worker.interrupt();
+    }*/
 
 }

@@ -78,9 +78,7 @@ public class SocketServer {
      *         listening for or servicing requests
      */
     public void start() throws IOException {
-        /*while (!stopped) {
-            // implement me
-        }*/
+        // implement me
         try {
             server.setSoTimeout(SocketServer.TIMEOUT);
         } catch (SocketException se) {
@@ -94,7 +92,7 @@ public class SocketServer {
                 handler.handle(s); // what if this takes longer than TIMEOUT? (waiting on lock)
             } catch (SocketTimeoutException ste) {
                 // do nothing. if a timeout occurs, just try to accept a connection again,
-                // unless stopped is true. this is the mechanism make  stop  close the
+                // unless stopped is true. this is the mechanism that makes stop() close the socket after TIMEOUT
             }
         }
         try {
