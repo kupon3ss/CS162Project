@@ -67,8 +67,8 @@ public class KVClient implements KeyValueInterface {
     public void put(String key, String value) throws KVException {
     	Socket sock = null;
     	try {
-    		if(key.equals("") || key == null) throw new KVException(ERROR_INVALID_KEY);
-    		if(value.equals("") || value == null) throw new KVException(ERROR_INVALID_VALUE);
+    		if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
+    		if(value == null || value.equals("")) throw new KVException(ERROR_INVALID_VALUE);
     		
     		sock = connectHost();
 
@@ -103,7 +103,7 @@ public class KVClient implements KeyValueInterface {
     	Socket sock = null;
     	String toReturn = null;
         try {
-        	if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
+        	if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
         	
         	sock = connectHost();
         	KVMessage outMsg = new KVMessage(GET_REQ);
@@ -137,7 +137,7 @@ public class KVClient implements KeyValueInterface {
     public void del(String key) throws KVException {
     	Socket sock = null;
         try {
-        	if(key == "" || key == null) throw new KVException(ERROR_INVALID_KEY);
+        	if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
         	
         	sock = connectHost();
         	
