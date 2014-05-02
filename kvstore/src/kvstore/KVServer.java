@@ -15,8 +15,15 @@ public class KVServer implements KeyValueInterface {
     private KVStore dataStore;
     private KVCache dataCache;
 
-    private static final int MAX_KEY_SIZE = 256;
-    private static final int MAX_VAL_SIZE = 256 * 1024;
+    public static final int MAX_KEY_SIZE = 256;
+    public static final int MAX_VAL_SIZE = 256 * 1024;
+
+    private static final KVException
+            INVALID_KEY_RESP_EXCEPTION = new KVException(new KVMessage(RESP, ERROR_INVALID_KEY)),
+            OVERSIZED_KEY_RESP_EXCEPTION = new KVException(new KVMessage(RESP, ERROR_OVERSIZED_KEY)),
+            INVALID_VAL_RESP_EXCEPTION = new KVException(new KVMessage(RESP, ERROR_INVALID_VALUE)),
+            OVERSIZED_VAL_RESP_EXCEPTION = new KVException(new KVMessage(RESP, ERROR_OVERSIZED_VALUE));
+
 
     /**
      * Constructs a KVServer backed by a KVCache and KVStore.
@@ -30,6 +37,20 @@ public class KVServer implements KeyValueInterface {
         this.dataStore = new KVStore();
     }
 
+    public static void checkKey(String key) throws KVException {
+        if (key == null || key.length() == 0)
+    		throw INVALID_KEY_RESP_EXCEPTION;
+    	else if (key.length() > MAX_KEY_SIZE)
+    		throw OVERSIZED_KEY_RESP_EXCEPTION;
+    }
+
+    public static void checkValue(String value) throws KVException {
+        if (value == null || value.length() == 0)
+    		throw INVALID_VAL_RESP_EXCEPTION;
+    	else if (value.length() > MAX_VAL_SIZE)
+    		throw OVERSIZED_VAL_RESP_EXCEPTION;
+    }
+
     /**
      * Performs put request on cache and store.
      *
@@ -40,17 +61,9 @@ public class KVServer implements KeyValueInterface {
     @Override
     public void put(String key, String value) throws KVException {
     	//Bulletproofing
-    	if (key == null || key.length() == 0) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
-    	} else if (key.length() >= MAX_KEY_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_KEY));
-    	} else if (value == null || value.length() == 0) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_VALUE));
-    	} else if (value.length() >= MAX_VAL_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_VALUE));
-    	}
-    	
-    	
+        checkKey(key);
+        checkValue(value);
+
     	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
     	lock.lock();
     	try {
@@ -71,22 +84,17 @@ public class KVServer implements KeyValueInterface {
      */
     @Override
     public String get(String key) throws KVException {
-    	if (key == null || key.length() == 0) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
-    	} else if (key.length() >= MAX_KEY_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_OVERSIZED_KEY));
-    	}
-    	
+    	checkKey(key);
+
     	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
     	lock.lock();
     	try {
 	    	if (dataCache.get(key) != null) {
 	    		return dataCache.get(key);
-	    	} else {
-	    		String value = dataStore.get(key); //Possible exception here
-	    		dataCache.put(key, value);
-	    		return dataCache.get(key);
 	    	}
+	        String value = dataStore.get(key); //Possible exception here
+	    	dataCache.put(key, value);
+	   		return dataCache.get(key);
     	} finally {
     		lock.unlock();
     	}
@@ -101,12 +109,8 @@ public class KVServer implements KeyValueInterface {
     @Override
     public void del(String key) throws KVException {
     	//Bulletproofing
-    	if (key == null || key.length() == 0) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
-    	} else if (key.length() >= MAX_KEY_SIZE) {
-    		throw new KVException(new KVMessage(KVConstants.RESP, ERROR_INVALID_KEY));
-    	} 
-    	
+    	checkKey(key);
+
     	Lock lock = dataCache.getLock(key); //Obtain appropriate lock
     	lock.lock();
     	try {

@@ -5,9 +5,7 @@ import static kvstore.KVConstants.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.io.*;
 
-import javax.xml.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -29,14 +27,13 @@ public class KVMessage implements Serializable {
     private String value;
     private String message;
     
-    public static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP };
+    private static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP };
     private static final Set<String> msgTypes = new HashSet<String>(Arrays.asList(SET_TYPES));
     
-    public static final String[] ELEMENT_TYPES = new String[] { "Value", "Key", "Message", "#text" };
+    private static final String[] ELEMENT_TYPES = new String[] { "Value", "Key", "Message", "#text" };
+    //private static final String VAL = "Value", KEY = "Key", MESS = "Message", TEXT = "#text";
     private static final Set<String> eleTypes = new HashSet<String>(Arrays.asList(ELEMENT_TYPES));
     
-    private static NoCloseInputStream OpenStream;
-
     public static final long serialVersionUID = 6473128480951955693L;
     
     public KVMessage(KVMessage kvm) {
@@ -80,9 +77,6 @@ public class KVMessage implements Serializable {
      * @param  sock Socket to receive serialized KVMessage through
      * @throws KVException if we fail to create a valid KVMessage. Please see
      *         KVConstants.java for possible KVException messages.
-     * @throws IOException 
-     * @throws SAXException 
-     * @throws ParserConfigurationException 
      */
     public KVMessage(Socket sock) throws KVException{
         this(sock, 0);
@@ -97,20 +91,17 @@ public class KVMessage implements Serializable {
      * @param  timeout total allowable receipt time, in milliseconds
      * @throws KVException if we fail to create a valid KVMessage. Please see
      *         KVConstants.java for possible KVException messages.
-     * @throws IOException 
-     * @throws ParserConfigurationException 
-     * @throws SAXException 
      */
     public KVMessage(Socket sock, int timeout) throws KVException {
         // implement me
-    	Document document = null;
+    	Document document;
     	try {
 	    	sock.setSoTimeout(timeout);
-	    	OpenStream = new NoCloseInputStream( sock.getInputStream() );
+	    	NoCloseInputStream openStream = new NoCloseInputStream( sock.getInputStream() );
 	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	        DocumentBuilder builder;
 			builder = factory.newDocumentBuilder();
-			document = builder.parse(OpenStream);
+			document = builder.parse(openStream);
 
     	} catch (SAXException e) {
 			throw new KVException(ERROR_INVALID_FORMAT);
@@ -129,7 +120,7 @@ public class KVMessage implements Serializable {
 		if (!msgTypes.contains(root.getAttribute("type"))){
 			throw new KVException(ERROR_INVALID_FORMAT);
     	}
-    	if (root.getAttribute("type").equals(PUT_REQ)){
+        else if (root.getAttribute("type").equals(PUT_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
 
@@ -142,18 +133,19 @@ public class KVMessage implements Serializable {
     			
                 if (elementtype.equals("Key")) {
                 	this.key = element.getTextContent();
-                } else if (elementtype.equals("Value")) {
+                }
+                else if (elementtype.equals("Value")) {
                 	this.value = element.getTextContent();
                 }
                 else if (elementtype.equals("Message")){
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
-    		if (this.key == null || this.key == "" || this.value == null || this.value == ""){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    			}
+    		if (this.key == null || this.key.equals("") || this.value == null || this.value.equals("")){
+    			throw new KVException(ERROR_INVALID_FORMAT);
+    	    }
     	}
-    	if (root.getAttribute("type").equals(GET_REQ)){
+    	else if (root.getAttribute("type").equals(GET_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -171,11 +163,11 @@ public class KVMessage implements Serializable {
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
-    		if (this.key == null || this.key == ""){
+    		if (this.key == null || this.key.equals("")){
 				throw new KVException(ERROR_INVALID_FORMAT);
 			}
     	}
-    	if (root.getAttribute("type").equals(DEL_REQ)){
+    	else if (root.getAttribute("type").equals(DEL_REQ)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -193,13 +185,13 @@ public class KVMessage implements Serializable {
         			throw new KVException(ERROR_INVALID_FORMAT);
                 }
     		}
-    		if (this.key == null || this.key == ""){
+    		if (this.key == null || this.key.equals("")){
 				throw new KVException(ERROR_INVALID_FORMAT);
 			}
     	}
     	// need a check and bulletproofing here
    
-    	if (root.getAttribute("type").equals(RESP)){
+    	else if (root.getAttribute("type").equals(RESP)){
     		this.msgType = root.getAttribute("type");
     		for (int i = 0; i < elements.getLength(); ++i) {
     			Node element = elements.item(i);
@@ -291,15 +283,7 @@ public class KVMessage implements Serializable {
     }
     
     */
-    
-    /**
-     * Generate the serialized XML representation for this message. See
-     * the spec for details on the expected output format.
-     *
-     * @return the XML string representation of this KVMessage
-     * @throws KVException with ERROR_INVALID_FORMAT or ERROR_PARSER
-     * @throws ParserConfigurationException 
-     */
+
     
     /*
      *    	
@@ -319,12 +303,18 @@ public class KVMessage implements Serializable {
     		
     	} 
      */
-    
+    /**
+     * Generate the serialized XML representation for this message. See
+     * the spec for details on the expected output format.
+     *
+     * @return the XML string representation of this KVMessage
+     * @throws KVException with ERROR_INVALID_FORMAT or ERROR_PARSER
+     */
     public String toXML() throws KVException{
         // implement me
-    	Document xmldoc = null;
+    	Document xmldoc;
     	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    	DocumentBuilder builder = null;
+    	DocumentBuilder builder;
 		try {
 			builder = factory.newDocumentBuilder();
 		} catch (ParserConfigurationException e1) {
@@ -339,9 +329,9 @@ public class KVMessage implements Serializable {
 		
 		//check for sanity?
     	
-	     if (!msgTypes.contains(this.msgType)){
+	    /*if (!msgTypes.contains(this.msgType)){
 
-	     }
+	    }*/
 	    if (this.msgType.equals(PUT_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
@@ -350,38 +340,32 @@ public class KVMessage implements Serializable {
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 	    }
-	    if (this.msgType.equals(GET_REQ)){
+	    else if (this.msgType.equals(GET_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
-	    if (this.msgType.equals(DEL_REQ)){
+	    else if (this.msgType.equals(DEL_REQ)){
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			xmlroot.appendChild(xmlkey);
 	    }
 	    //not sure how to bulletproof the responses
-	    if (this.msgType.equals(RESP)){
-    		if (this.key != null){
-	    	if (!this.key.isEmpty()){
+	    else if (this.msgType.equals(RESP)){
+    		if (this.key != null && !this.key.isEmpty()) {
 		    	Element xmlkey = xmldoc.createElement("Key");
 				xmlkey.appendChild(xmldoc.createTextNode(this.key));
 				xmlroot.appendChild(xmlkey);
 	    	}
-    		}
-	    	if (this.value != null){
-	    	if (!this.value.isEmpty()){
+	    	if (this.value != null && !this.value.isEmpty()) {
 				Element xmlval = xmldoc.createElement("Value");
 				xmlval.appendChild(xmldoc.createTextNode(this.value));	
 				xmlroot.appendChild(xmlval);
 	    	}
-	    	}
-	    	if (this.message != null){
-	    	if (!this.message.isEmpty()){
+	    	if (this.message != null && !this.message.isEmpty()) {
 				Element xmlmsg = xmldoc.createElement("Message");
 				xmlmsg.appendChild(xmldoc.createTextNode(this.message));	
 				xmlroot.appendChild(xmlmsg);
-	    	}
 	    	}
 	    }
 	    

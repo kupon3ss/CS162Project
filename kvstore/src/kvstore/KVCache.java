@@ -1,6 +1,7 @@
 package kvstore;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -55,12 +56,12 @@ public class KVCache implements KeyValueInterface {
     @Override
     public String get(String key) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
-    	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i).getKey() == key) {
-    			set.get(i).setRefTrue();
-    			return set.get(i).getValue();
-    		}
-    	}
+        for (CacheEntry entry : set) {
+            if (entry.getKey().equals(key)) {
+                entry.setRefTrue();
+                return entry.getValue();
+            }
+        }
     	return null;
     }
 
@@ -86,35 +87,35 @@ public class KVCache implements KeyValueInterface {
     	boolean replaced = false;
     	
     	//Checks if key already exists in set
-    	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i).getKey() == key) {
-    			set.get(i).setValue(value);
-    			set.get(i).setRefTrue();
-    			replaced = true;
-    		}
-    	}
+        for (CacheEntry entry : set) {
+            if (entry.getKey().equals(key)) {
+                entry.setValue(value);
+                entry.setRefTrue();
+                replaced = true;
+            }
+        }
     	
     	//Should only run if key did not exist and key, value not replaced
     	//Either use second chance algorithm or append onto end of list
     	if (!replaced) {
-    		if (set.size() == maxElemsPerSet) {
-    			while (true) {
-        			CacheEntry secondChance; 
-        			if (set.getFirst().getRef()) {
-        				//Gives second chance. Removes head and adds onto tail with ref bit false
-        				secondChance = set.remove();
-        				secondChance.setRefFalse();
-        				set.addLast(secondChance);
-        			} else {
-        				//No second chance so remove head and adds new entry onto tail
-        				set.remove();
-        				set.add(new CacheEntry(key, value));
-        				break;
-        			}
-        		}
-    		} else {
-    			set.add(new CacheEntry(key, value));
-    		}
+            if (set.size() != maxElemsPerSet) {
+                set.add(new CacheEntry(key, value));
+                return;
+            }
+    		while (true) {
+        		CacheEntry secondChance;
+        		if (set.getFirst().hasRef()) {
+       				//Gives second chance. Removes head and adds onto tail with ref bit false
+       				secondChance = set.remove();
+        			secondChance.setRefFalse();
+        			set.addLast(secondChance);
+       			} else {
+        			//No second chance so remove head and adds new entry onto tail
+        			set.remove();
+        			set.add(new CacheEntry(key, value));
+       				break;
+       			}
+       		}
     	}	
     }
 
@@ -127,12 +128,10 @@ public class KVCache implements KeyValueInterface {
      */
     @Override
     public void del(String key) {
-    	LinkedList<CacheEntry> set = cache.get(getSetId(key));
-    	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i).getKey() == key) {
-    			set.remove(i);
-    		}
-    	}
+        Iterator<CacheEntry> set = cache.get(getSetId(key)).iterator();
+        while (set.hasNext()) {
+            if (set.next().getKey().equals(key)) set.remove();
+        }
     }
 
     /**
@@ -173,20 +172,20 @@ public class KVCache implements KeyValueInterface {
     			setXML.setAttribute("Id", Integer.toString(i));
     			
     			LinkedList<CacheEntry> set = cache.get(i);
-    			for (int j = 0; j < set.size(); j++) {
-    				Element entry = xmlDoc.createElement("CacheEntry");
-    				entry.setAttribute("isReferenced", String.valueOf(set.get(j).getRef()));
-    				
-    				Element key = xmlDoc.createElement("Key");
-    				key.appendChild(xmlDoc.createTextNode(set.get(j).getKey()));
-    				Element value = xmlDoc.createElement("Value");
-    				value.appendChild(xmlDoc.createTextNode(set.get(j).getValue()));
-    				
-    				entry.appendChild(key);
-    				entry.appendChild(value);
-    				
-    				setXML.appendChild(entry);
-    			}
+                for (CacheEntry e : set) {
+                    Element entry = xmlDoc.createElement("CacheEntry");
+                    entry.setAttribute("isReferenced", String.valueOf(e.hasRef()));
+
+                    Element key = xmlDoc.createElement("Key");
+                    key.appendChild(xmlDoc.createTextNode(e.getKey()));
+                    Element value = xmlDoc.createElement("Value");
+                    value.appendChild(xmlDoc.createTextNode(e.getValue()));
+
+                    entry.appendChild(key);
+                    entry.appendChild(value);
+
+                    setXML.appendChild(entry);
+                }
     			root.appendChild(setXML);
     		}
     		xmlDoc.appendChild(root);
@@ -220,22 +219,16 @@ public class KVCache implements KeyValueInterface {
     }
     
     /**
-     * 
-     * @author MichaelChuang
      * Testing reference purposes. Get the reference bit of given key.
      * Returns -1 if doesn't exist in set. Otherwise, returns 0 for false or 1 for true. 
      */
     public int getReference(String key) {
     	LinkedList<CacheEntry> set = cache.get(getSetId(key));
-    	for (int i = 0; i < set.size(); i++) {
-    		if (set.get(i).getKey() == key) {
-    			if (set.get(i).getRef()) {
-    				return 1;
-    			} else {
-    				return 0;
-    			}
-    		}
-    	}
+        for (CacheEntry entry : set) {
+            if (entry.getKey().equals(key)) {
+                return entry.hasRef() ? 1 : 0;
+            }
+        }
     	return -1;
     }
 
@@ -270,7 +263,7 @@ public class KVCache implements KeyValueInterface {
     		return this.key;
     	}
     	
-    	public boolean getRef() {
+    	public boolean hasRef() {
     		return this.reference;
     	}
     }

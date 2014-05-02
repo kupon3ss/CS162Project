@@ -16,7 +16,7 @@ public class KVClient implements KeyValueInterface {
 
     /**
      * Constructs a KVClient connected to a server.
-     *
+     *h
      * @param server is the DNS reference to the server
      * @param port is the port to which the server is listening
      */
@@ -67,8 +67,8 @@ public class KVClient implements KeyValueInterface {
     public void put(String key, String value) throws KVException {
     	Socket sock = null;
     	try {
-    		if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
-    		if(value == null || value.equals("")) throw new KVException(ERROR_INVALID_VALUE);
+    		if (key == null || key.isEmpty()) throw new KVException(ERROR_INVALID_KEY);
+    		if (value == null || value.isEmpty()) throw new KVException(ERROR_INVALID_VALUE);
     		
     		sock = connectHost();
 
@@ -76,7 +76,7 @@ public class KVClient implements KeyValueInterface {
     		outMsg.setKey(key);
     		outMsg.setValue(value);
     		outMsg.sendMessage(sock);
-    		
+
     		KVMessage inMsg = new KVMessage(sock);
     		String message = inMsg.getMessage();
     		//assertTrue(message != null);
@@ -103,8 +103,8 @@ public class KVClient implements KeyValueInterface {
     	Socket sock = null;
     	String toReturn = null;
         try {
-        	if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
-        	
+            if (key == null || key.isEmpty()) throw new KVException(ERROR_INVALID_KEY);
+
         	sock = connectHost();
         	KVMessage outMsg = new KVMessage(GET_REQ);
         	outMsg.setKey(key);
@@ -137,8 +137,8 @@ public class KVClient implements KeyValueInterface {
     public void del(String key) throws KVException {
     	Socket sock = null;
         try {
-        	if(key == null || key.equals("")) throw new KVException(ERROR_INVALID_KEY);
-        	
+            if (key == null || key.isEmpty()) throw new KVException(ERROR_INVALID_KEY);
+
         	sock = connectHost();
         	
         	KVMessage outMsg = new KVMessage(DEL_REQ);
@@ -150,8 +150,8 @@ public class KVClient implements KeyValueInterface {
         	if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
         	if(!message.equals(SUCCESS)) throw new KVException(message);
 
-        } catch (KVException kve) {
-        	throw kve;
+     /*   } catch (KVException kve) {
+        	throw kve;*/
         } finally {
         	if(sock != null) closeHost(sock);
         }

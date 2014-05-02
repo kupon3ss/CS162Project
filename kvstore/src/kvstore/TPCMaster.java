@@ -2,7 +2,9 @@ package kvstore;
 
 import static kvstore.KVConstants.*;
 
+import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 
@@ -110,9 +112,51 @@ public class TPCMaster {
      * @throws KVException if the operation cannot be carried out for any reason
      */
     public synchronized void handleTPCRequest(KVMessage msg, boolean isPutReq)
-            throws KVException {
+                                throws KVException {
         // implement me
+        /*String key = msg.getKey();
+        KVServer.checkKey(key); // pass exception on to caller
+
+        Lock setLock = masterCache.getLock(key);
+        setLock.lock();
+
+        try {
+            TPCSlaveInfo firstSlave = findFirstReplica(key);
+            TPCSlaveInfo secondSlave = findSuccessor(firstSlave);
+
+            Socket firstSocket = connectSlave(firstSlave);
+            Socket secondSocket = connectSlave(secondSlave);
+
+            msg.sendMessage(firstSocket);
+            KVMessage phase1Response = new KVMessage(firstSocket, TIMEOUT);
+            if (phase1Response.getMsgType().equals(READY))
+                // do nothing
+            else if (phase1Response.getMsgType().equals(ABORT))
+                ; // global-abort, abort
+
+            msg.sendMessage(secondSocket);
+            KVMessage phase2Response = new KVMessage(secondSocket, TIMEOUT);
+            if (secondResponse.getMsgType().equals(READY))
+                ;// ready, commit
+            else if (secondResponse.getMsgType().equals(ABORT))
+                ; // global-abort, abort
+
+            if type.equals(response)
+            //assert response.getKey().equals(msg.getKey());
+            return response.getValue();
+
+        } finally {
+            setLock.unlock();
+        }*/
     }
+
+    /*private void tpcPhase1(KVMessage msg) throws KVException {
+        String key = msg.getKey();
+    }
+
+    private void tpcPhase2() {
+
+    }*/
 
     /**
      * Perform GET operation in the following manner:
@@ -121,7 +165,7 @@ public class TPCMaster {
      * - If primary succeeded, return value
      * - If primary failed, try to GET from the other replica
      * - If secondary succeeded, return value
-     * - If secondary failed, return KVExceptions from both replicas
+     * - If secondary failed, return KVException from second replica
      *
      * @param msg KVMessage containing key to get
      * @return value corresponding to the Key
@@ -130,7 +174,62 @@ public class TPCMaster {
      */
     public String handleGet(KVMessage msg) throws KVException {
         // implement me
-        return null;
+        String key = msg.getKey();
+        KVServer.checkKey(key); // pass exception on to caller
+
+        // get the lock for this set and acquire (lock) it. any keys in the set protected by the
+        //  lock cannot be accessed or updated while this critical section executes
+        Lock lock = masterCache.getLock(key);
+        lock.lock();
+
+        try {
+            // attempt to get from the master cache
+            String val = masterCache.get(key);
+            if (val != null) return val;
+
+            TPCSlaveInfo replica = findFirstReplica(key);
+            try {
+                // attempt to get from first replica
+                val = getFromSlave(msg, replica);
+            } catch (KVException kve) {
+                // retry with second, which may throw an excepion (not handled here, passed to caller)
+                replica = findSuccessor(replica);
+                val = getFromSlave(msg, replica);
+            }
+            masterCache.put(key, val);
+            return val;
+
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private String getFromSlave(KVMessage msg, TPCSlaveInfo replica) throws KVException {
+        try {
+            Socket slaveSocket = connectSlave(replica);
+            msg.sendMessage(slaveSocket);
+            KVMessage response = new KVMessage(slaveSocket);
+            //assert response.getKey().equals(msg.getKey());
+            return response.getValue();
+        } catch (KVException kve) {
+            throw new KVException(ERROR_NO_SUCH_KEY);
+        }
+    }
+
+    /**
+     * Creates a socket connected to the slave to make a request.
+     *
+     * @return Socket connected to slave server
+     * @throws KVException if unable to make or connect socket
+     */
+    private Socket connectSlave(TPCSlaveInfo slaveInfo) throws KVException {
+        try {
+        	return new Socket(slaveInfo.getHostname(), slaveInfo.getPort());
+        } catch (UnknownHostException uhe) {
+        	throw new KVException(ERROR_COULD_NOT_CONNECT);
+        } catch (IOException ioe) {
+        	throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
+        }
     }
 
 }

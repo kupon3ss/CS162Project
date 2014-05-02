@@ -15,6 +15,7 @@ public class KVConstants {
     public static final String COMMIT   = "commit";
     public static final String ACK      = "ack";
 
+
     /**
      * Error message used if an IOException arises while parsing the
      * InputStream of a socket during deserialization of a KVMessage.
