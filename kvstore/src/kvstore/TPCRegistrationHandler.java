@@ -74,16 +74,15 @@ public class TPCRegistrationHandler implements NetworkHandler {
             	master.registerSlave(new TPCSlaveInfo(info));
             	
             	resp = new KVMessage(RESP, SUCCESS);
-            	resp.sendMessage(slave);
             	
             } catch (KVException e) {
             	resp = new KVMessage(RESP, ERROR_INVALID_FORMAT);
-            	try {
-            		resp.sendMessage(slave);
-            	} catch (KVException kve) {
-            		
-            	}
             }
+            try {
+        		resp.sendMessage(slave);
+        	} catch (KVException kve) {
+        		//Best effort response
+        	}
         }
     }
 }

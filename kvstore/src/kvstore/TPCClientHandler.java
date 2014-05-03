@@ -76,27 +76,24 @@ public class TPCClientHandler implements NetworkHandler {
         			response = new KVMessage(RESP);
         			response.setKey(request.getKey());
         			response.setValue(tpcMaster.handleGet(request));
-        			response.sendMessage(client);
         		} else if (request.getMsgType() == PUT_REQ) {
         			tpcMaster.handleTPCRequest(request, true);
         			response = new KVMessage(RESP, SUCCESS);
-        			response.sendMessage(client);
         		} else if (request.getMsgType() == DEL_REQ) {
         			tpcMaster.handleTPCRequest(request, false);
         			response = new KVMessage(RESP, SUCCESS);
-        			response.sendMessage(client);
         		} else {
-        			response = new KVMessage(RESP, "failure");
-        			response.sendMessage(client);
+        			response = new KVMessage(RESP, "Invalid Request");
         		}
         	} catch (KVException kve) {
-        		response = new KVMessage(RESP, "failure");
-        		try {
-        			response.sendMessage(client);
-        		} catch (KVException e) {
-        			
-        		}
+        		response = kve.getKVMessage();
         	}
+        	
+    		try {
+    			response.sendMessage(client);
+    		} catch (KVException e) {
+    			//best effort response
+    		}
         }
     }
 
