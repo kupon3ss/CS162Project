@@ -56,6 +56,10 @@ public class TPCSlaveInfo {
      * @param sock Socket to be closed
      */
     public void closeHost(Socket sock) {
-        // implement me
+    	try {
+    		sock.close();
+    	} catch (IOException e) {
+    		//Error ignored
+    	}
     }
 }

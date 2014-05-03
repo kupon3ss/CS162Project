@@ -2,6 +2,7 @@ package kvstore;
 
 import static kvstore.KVConstants.*;
 
+import java.io.IOException;
 import java.net.Socket;
 /**
  * Implements NetworkHandler to handle 2PC operation requests from the Master/
@@ -55,7 +56,18 @@ public class TPCMasterHandler implements NetworkHandler {
      */
     public void registerWithMaster(String masterHostname, SocketServer server)
             throws KVException {
-        // implement me
+    	try {
+	        KVMessage registerSlave = new KVMessage(REGISTER, slaveID+"@"+server.getHostname()+":"+server.getPort());
+	        Socket master = new Socket(masterHostname, 9090);
+	        registerSlave.sendMessage(master);
+	        
+	        KVMessage response = new KVMessage(master);
+	        if (response.getMsgType() != SUCCESS) {
+	        	throw new KVException(ERROR_INVALID_FORMAT);
+	        }
+    	} catch (IOException e) {
+    		
+    	}
     }
 
     /**

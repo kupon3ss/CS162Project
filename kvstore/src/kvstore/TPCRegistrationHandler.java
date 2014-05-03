@@ -43,7 +43,7 @@ public class TPCRegistrationHandler implements NetworkHandler {
      */
     @Override
     public void handle(Socket slave) {
-        // implement me
+        this.threadpool.addJob(new RegistrationHandler(slave));
     }
 
     /**
@@ -66,7 +66,24 @@ public class TPCRegistrationHandler implements NetworkHandler {
          */
         @Override
         public void run() {
-            // implement me
+            KVMessage resp;
+            try {
+            	KVMessage message = new KVMessage(slave);
+            	String info = message.getMessage();
+            	
+            	master.registerSlave(new TPCSlaveInfo(info));
+            	
+            	resp = new KVMessage(RESP, SUCCESS);
+            	resp.sendMessage(slave);
+            	
+            } catch (KVException e) {
+            	resp = new KVMessage(RESP, ERROR_INVALID_FORMAT);
+            	try {
+            		resp.sendMessage(slave);
+            	} catch (KVException kve) {
+            		
+            	}
+            }
         }
     }
 }
