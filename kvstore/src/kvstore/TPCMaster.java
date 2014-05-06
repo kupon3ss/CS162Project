@@ -12,6 +12,9 @@ public class TPCMaster {
 
     private int numSlaves;
     private KVCache masterCache;
+    
+    private ArrayList<TPCSlaveInfo> slaveList;
+    //private LinkedList<TPCSlaveInfo> slaveList2;
 
     public static final int TIMEOUT = 3000;
 
@@ -34,8 +37,34 @@ public class TPCMaster {
      *
      * @param slave the slaveInfo to be registered
      */
-    public void registerSlave(TPCSlaveInfo slave) {
+    public synchronized void registerSlave(TPCSlaveInfo slave) {
         // implement me
+    	if (slave == null) {return;}
+    	
+    	boolean reregister = false;
+    	for (int i = 0; i < slaveList.size(); i++) {
+    		if (slave.getSlaveID() == slaveList.get(i).getSlaveID()) {
+    			reregister = true;
+    		}
+    	}
+    	
+    	if (slaveList.size() >= numSlaves && !reregister) {return;}
+    	
+    	if (!reregister) {
+	    	int n = 0;
+	    	for (int i = 0; i < slaveList.size(); i++) {
+	    		if (TPCMaster.isLessThanEqualUnsigned(slaveList.get(i).getSlaveID(), slave.getSlaveID())) {
+	    			n = i + 1;
+	    		}
+	    	}
+	    	slaveList.add(n, slave);
+    	} else {
+    		for (int i = 0; i < slaveList.size(); i++) {
+	    		if (slaveList.get(i).getSlaveID() == slave.getSlaveID()) {
+	    			slaveList.set(i, slave);
+	    		}
+	    	}
+    	}
     }
 
     /**
@@ -86,7 +115,22 @@ public class TPCMaster {
      */
     public TPCSlaveInfo findFirstReplica(String key) {
         // implement me
-        return null;
+    	if (key == null) {return null;}
+    	long keyID = TPCMaster.hashTo64bit(key);
+    	
+    	boolean x = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(0).getSlaveID());
+    	
+    	int n = 0;
+    	
+    	for (int i = 1; i < slaveList.size(); i++) {
+    		boolean y = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(i).getSlaveID());
+    		if (x != y) {
+    			n = i;
+    			break;
+    		}
+    	}
+    	
+        return slaveList.get(n);
     }
 
     /**
@@ -97,7 +141,21 @@ public class TPCMaster {
      */
     public TPCSlaveInfo findSuccessor(TPCSlaveInfo firstReplica) {
         // implement me
-        return null;
+        if (firstReplica == null) {return null;}
+        
+        int n = -1;
+        for (int i = 0; i < slaveList.size(); i++) {
+    		if (slaveList.get(i).getSlaveID() == firstReplica.getSlaveID()) {
+    			if (i != slaveList.size() - 1) {
+    				n = i + 1;
+    			} else {
+    				n = 0;
+    			}
+    		}
+    	}
+        
+        if (n == -1) {return null;}
+        return slaveList.get(n);
     }
 
     /**
