@@ -27,7 +27,7 @@ public class KVMessage implements Serializable {
     private String value;
     private String message;
     
-    private static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP };
+    private static final String[] SET_TYPES = new String[] { GET_REQ, PUT_REQ, DEL_REQ, RESP, COMMIT, ABORT, READY, ACK};
     private static final Set<String> msgTypes = new HashSet<String>(Arrays.asList(SET_TYPES));
     
     private static final String[] ELEMENT_TYPES = new String[] { "Value", "Key", "Message", "#text" };
