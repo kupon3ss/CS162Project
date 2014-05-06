@@ -106,6 +106,29 @@ public class TPCMasterHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
+        	KVMessage message = null;
+        	try {
+				message = new KVMessage(this.master);
+			} catch (KVException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+        	
+        	if (message.getMsgType() == "GETREQ"){
+        		
+        	}
+        	
+        	if (message.getMsgType() == "PUTREQ"){
+        		
+        	}
+        	if (message.getMsgType() == "DELREQ"){
+        		
+        	}
+        	
+        	
+        	
+        	tpcLog.appendAndFlush(message);
         }
 
     }
