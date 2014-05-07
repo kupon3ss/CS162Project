@@ -194,6 +194,11 @@ public class TPCMaster {
             msg = new KVMessage(ready ? COMMIT : ABORT);
             doTPCPhase2(msg, firstSocket);
             doTPCPhase2(msg, secondSocket);
+
+            // put/del from master cache upon success
+            if (isPutReq) masterCache.put(key, msg.getValue());
+            else masterCache.del(key);
+
         } finally {
             setLock.unlock();
             if (firstSocket != null) firstSlave.closeHost(firstSocket);

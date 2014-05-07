@@ -485,7 +485,7 @@ public class KVMessage implements Serializable {
  
 		try {
 			transformer.transform(source, xmlout);
-		} catch (TransformerException e) {
+		} catch (TransformerException|NullPointerException e) {
 			throw new KVException (ERROR_INVALID_FORMAT);
 		}
         return xmlwriter.toString();

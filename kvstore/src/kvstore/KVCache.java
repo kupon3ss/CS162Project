@@ -203,7 +203,7 @@ public class KVCache implements KeyValueInterface {
     		
     		try {
     			transformer.transform(source, xmlout);
-    		} catch (TransformerException e) {
+    		} catch (TransformerException|NullPointerException e) {
     		}
     		
     		xmlDoc.setXmlStandalone(true);
