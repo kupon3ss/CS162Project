@@ -457,6 +457,19 @@ public class KVMessage implements Serializable {
 	    	}
 	    }
 	    
+	    else if (this.msgType.equals(REGISTER) || this.msgType.equals(ABORT)){
+	    	if (this.message != null && !this.message.isEmpty()) {
+				Element xmlmsg = xmldoc.createElement("Message");
+				xmlmsg.appendChild(xmldoc.createTextNode(this.message));	
+				xmlroot.appendChild(xmlmsg);
+	    	}
+	    }
+	    
+	    else if (this.msgType.equals(READY) || this.msgType.equals(ABORT) || this.msgType.equals(COMMIT) || this.msgType.equals(ACK)){
+	    //dont need to do anything here
+	    }
+	    
+	    
 	    Transformer transformer = null;
 	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		try {

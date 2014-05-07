@@ -14,6 +14,7 @@ public class TPCMasterHandler implements NetworkHandler {
     private KVServer kvServer;
     private TPCLog tpcLog;
     private ThreadPool threadpool;
+    private int Handshakestate;
 
     /**
      * Constructs a TPCMasterHandler with one connection in its ThreadPool
@@ -107,6 +108,7 @@ public class TPCMasterHandler implements NetworkHandler {
         public void run() {
             // implement me
         	KVMessage message = null;
+        	Handshakestate = 0;
         	try {
 				message = new KVMessage(this.master);
 			} catch (KVException e) {
@@ -116,14 +118,16 @@ public class TPCMasterHandler implements NetworkHandler {
 			}
         	
         	if (message.getMsgType() == "GETREQ"){
-        		
+        		tpcLog.appendAndFlush(message);
         	}
         	
         	if (message.getMsgType() == "PUTREQ"){
-        		
+        		tpcLog.appendAndFlush(message);
+
         	}
+        	
         	if (message.getMsgType() == "DELREQ"){
-        		
+        		tpcLog.appendAndFlush(message);
         	}
         	
         	
