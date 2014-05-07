@@ -107,28 +107,64 @@ public class TPCMasterHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
-        	KVMessage message = null;
         	Handshakestate = 0;
+        	KVMessage message = null;
+        	KVMessage request = null;
+        	KVMessage response = null;
         	try {
-				message = new KVMessage(this.master);
-			} catch (KVException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
-			}
-        	
-        	if (message.getMsgType() == "GETREQ"){
-        		tpcLog.appendAndFlush(message);
-        	}
-        	
-        	if (message.getMsgType() == "PUTREQ"){
-        		tpcLog.appendAndFlush(message);
+        		request = new KVMessage(master);
+                switch (request.getMsgType()) {
+                	case GET_REQ:
+                		
+                		tpcLog.appendAndFlush(request);
+                		break;
+                	case PUT_REQ:
+                		
+                		tpcLog.appendAndFlush(request);
+                		break;
+                		
+                	case DEL_REQ:
+                		tpcLog.appendAndFlush(request);
+                		break;
+                		
+                	case RESP:
+                		
+                		tpcLog.appendAndFlush(request);
+                		break;
+                		
+                    case READY:
+                        
+                		tpcLog.appendAndFlush(request);
+                    	response = new KVMessage(RESP);
+                        break;
+                        
+                    case COMMIT:
+                    	
+                		tpcLog.appendAndFlush(request);
+                        break;
+                        
+                    case ABORT:
+                    	
+                		tpcLog.appendAndFlush(request);
 
+                    	break;
+                    	
+                    case ACK:
+                		tpcLog.appendAndFlush(request);
+
+                    	break;
+                    
+                    default: // should never happen, but in case a client were to send some other message
+                        response = new KVMessage(RESP, ERROR_INVALID_REQUEST);
+                }
+        	} catch (KVException kve) {
+        		response = kve.getKVMessage();
         	}
-        	
-        	if (message.getMsgType() == "DELREQ"){
-        		tpcLog.appendAndFlush(message);
-        	}
+    		try {
+    			response.sendMessage(master);
+    		} catch (KVException kve) {
+    			//best effort response (can't do anything)
+    		}
         	
         	
         	
