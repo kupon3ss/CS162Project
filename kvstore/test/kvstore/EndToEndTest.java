@@ -11,5 +11,20 @@ public class EndToEndTest extends EndToEndTemplate {
         client.put("foo", "bar");
         assertEquals(client.get("foo"), "bar");
     }
+    
+    @Test
+    public void testPutGet1() throws KVException {
+        client.put("foo", "bar");
+        client.put("foo", "blah");
+        assertEquals(client.get("foo"), "blah");
+    }
+    
+    @Test
+    public void testPutGet2() throws KVException {
+        client.put("foo", "bar");
+        assertEquals(client.get("foo"), "bar");
+        client.put("foo", "blah");
+        assertEquals(client.get("foo"), "blah");
+    }
 
 }

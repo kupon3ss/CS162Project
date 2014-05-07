@@ -1,11 +1,22 @@
 package kvstore;
 
+import static kvstore.KVConstants.*;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 
 public class TPCLog {
 
@@ -107,6 +118,29 @@ public class TPCLog {
      */
     public void rebuildServer() throws KVException {
         // implement me
+    	ObjectInputStream rebuild;
+    	try {
+    		rebuild = new ObjectInputStream(new FileInputStream(new File(logPath)));
+    		ArrayList<KVMessage> logs = (ArrayList<KVMessage>) rebuild.readObject();
+    		KVMessage request = null;
+    		for (KVMessage log: logs) {
+    			if (log.getMsgType() == PUT_REQ || log.getMsgType() == DEL_REQ) {
+    				request = log;
+    			} else if (log.getMsgType() == COMMIT) {
+    				if (request.getMsgType() == PUT_REQ) {
+    					kvServer.put(request.getKey(), request.getValue());
+    				} else if (request.getMsgType() == DEL_REQ) {
+    					kvServer.del(request.getKey());
+    				}
+    			} else if (log.getMsgType() == ABORT) {
+    				request = null;
+    			}
+    		}
+    		rebuild.close();
+    	} catch (Exception e) {
+    		throw new KVException("Error: Rebuild failed");
+    	} 
+    	
     }
 
 }

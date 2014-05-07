@@ -114,6 +114,15 @@ public class KVServerTest {
         }
     }
     
-
+    @Test
+    public void test0() {
+        try {
+            server.put("hello", "world");
+            assertEquals("world", server.get("hello"));
+            assertEquals("world", server.get("hello"));
+        } catch (KVException e) {
+            fail("This should not error");
+        }
+    }
 
 }
