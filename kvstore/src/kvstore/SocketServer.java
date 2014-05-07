@@ -67,6 +67,7 @@ public class SocketServer {
     public void connect() throws IOException {
         // implement me
         server = new ServerSocket(port);
+        if (port == 0) port = server.getLocalPort();
     }
 
     /**

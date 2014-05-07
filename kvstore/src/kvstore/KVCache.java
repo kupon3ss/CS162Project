@@ -102,8 +102,8 @@ public class KVCache implements KeyValueInterface {
                 set.add(new CacheEntry(key, value));
                 return;
             }
+            CacheEntry secondChance;
     		while (true) {
-        		CacheEntry secondChance;
         		if (set.getFirst().hasRef()) {
        				//Gives second chance. Removes head and adds onto tail with ref bit false
        				secondChance = set.remove();

@@ -84,7 +84,7 @@ public class KVClient implements KeyValueInterface {
     		if(!message.equals(SUCCESS)) throw new KVException(message);
     		
     	} catch (KVException kve) {
-    		System.out.println(kve.getKVMessage().getMessage());
+    		System.err.println(kve.getKVMessage().getMessage());
     		throw kve;
     	} finally {
     		if(sock != null) closeHost(sock);
@@ -101,7 +101,6 @@ public class KVClient implements KeyValueInterface {
     @Override
     public String get(String key) throws KVException {
     	Socket sock = null;
-    	String toReturn = null;
         try {
             if (key == null || key.isEmpty()) throw new KVException(ERROR_INVALID_KEY);
 
@@ -116,15 +115,14 @@ public class KVClient implements KeyValueInterface {
         	if(message != null) throw new KVException(message);
         	//Confirm that we got the right key back - I'm not sure we really have to do this
         	//if(!inMsg.getKey().equals(key)) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
-        	toReturn = inMsg.getValue();
+        	return inMsg.getValue();
 
         } catch (KVException kve) {
-        	System.out.println(kve.getKVMessage().getMessage());
+        	System.err.println(kve.getKVMessage().getMessage());
         	throw kve;
         } finally {
         	if(sock != null) closeHost(sock);
         }
-        return toReturn;
     }
 
     /**
@@ -150,8 +148,9 @@ public class KVClient implements KeyValueInterface {
         	if(message == null) throw new KVException(ERROR_COULD_NOT_RECEIVE_DATA);
         	if(!message.equals(SUCCESS)) throw new KVException(message);
 
-     /*   } catch (KVException kve) {
-        	throw kve;*/
+        } catch (KVException kve) {
+            System.err.println(kve.getKVMessage().getMessage());
+        	throw kve;
         } finally {
         	if(sock != null) closeHost(sock);
         }

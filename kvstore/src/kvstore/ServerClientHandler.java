@@ -74,19 +74,23 @@ public class ServerClientHandler implements NetworkHandler {
             KVMessage response;
             try {
                 KVMessage mess = new KVMessage(client);
-                String request = mess.getMsgType();
-                response = new KVMessage(RESP, SUCCESS);
-                if (request.equals(PUT_REQ))
-                    kvServer.put(mess.getKey(), mess.getValue());
-                else if (request.equals(DEL_REQ))
-                    kvServer.del(mess.getKey());
-                else if (request.equals(GET_REQ)) {
-                	response = new KVMessage(RESP);
-                    response.setValue(kvServer.get(mess.getKey()));
-                    response.setKey(mess.getKey());
+                switch (mess.getMsgType()) {
+                    case PUT_REQ:
+                        response = new KVMessage(RESP, SUCCESS);
+                        kvServer.put(mess.getKey(), mess.getValue());
+                        break;
+                    case DEL_REQ:
+                        response = new KVMessage(RESP, SUCCESS);
+                        kvServer.del(mess.getKey());
+                        break;
+                    case GET_REQ:
+                        response = new KVMessage(RESP);
+                        response.setValue(kvServer.get(mess.getKey()));
+                        response.setKey(mess.getKey());
+                        break;
+                    default: //should never happen, but in case a client were to send another message
+                        throw new KVException(ERROR_INVALID_REQUEST);
                 }
-                else
-                    throw new KVException("Invalid request");
             } catch (KVException kve) {
                 response = kve.getKVMessage();
             }

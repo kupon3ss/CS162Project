@@ -72,27 +72,30 @@ public class TPCClientHandler implements NetworkHandler {
         	KVMessage response;
         	try {
         		KVMessage request = new KVMessage(client);
-        		if (request.getMsgType() == GET_REQ) {
-        			response = new KVMessage(RESP);
-        			response.setKey(request.getKey());
-        			response.setValue(tpcMaster.handleGet(request));
-        		} else if (request.getMsgType() == PUT_REQ) {
-        			tpcMaster.handleTPCRequest(request, true);
-        			response = new KVMessage(RESP, SUCCESS);
-        		} else if (request.getMsgType() == DEL_REQ) {
-        			tpcMaster.handleTPCRequest(request, false);
-        			response = new KVMessage(RESP, SUCCESS);
-        		} else {
-        			response = new KVMessage(RESP, "Invalid Request");
-        		}
+                switch (request.getMsgType()) {
+                    case GET_REQ:
+                        response = new KVMessage(RESP);
+                        response.setKey(request.getKey());
+                        response.setValue(tpcMaster.handleGet(request));
+                        break;
+                    case PUT_REQ:
+                        tpcMaster.handleTPCRequest(request, true);
+        		    	response = new KVMessage(RESP, SUCCESS);
+                        break;
+                    case DEL_REQ:
+                        tpcMaster.handleTPCRequest(request, false);
+                        response = new KVMessage(RESP, SUCCESS);
+                        break;
+                    default: // should never happen, but in case a client were to send some other message
+                        response = new KVMessage(RESP, ERROR_INVALID_REQUEST);
+                }
         	} catch (KVException kve) {
         		response = kve.getKVMessage();
         	}
-        	
     		try {
     			response.sendMessage(client);
-    		} catch (KVException e) {
-    			//best effort response
+    		} catch (KVException kve) {
+    			//best effort response (can't do anything)
     		}
         }
     }

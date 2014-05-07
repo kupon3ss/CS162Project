@@ -106,4 +106,7 @@ public class KVConstants {
     public static final String ERROR_INVALID_VALUE =
         "Data Error: Null or empty value";
 
+    public static final String ERROR_INVALID_REQUEST =
+            "Error: Invalid request";
+
 }

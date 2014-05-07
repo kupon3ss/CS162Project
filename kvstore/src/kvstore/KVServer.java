@@ -38,14 +38,14 @@ public class KVServer implements KeyValueInterface {
     }
 
     public static void checkKey(String key) throws KVException {
-        if (key == null || key.length() == 0)
+        if (key == null || key.isEmpty())
     		throw INVALID_KEY_RESP_EXCEPTION;
     	else if (key.length() > MAX_KEY_SIZE)
     		throw OVERSIZED_KEY_RESP_EXCEPTION;
     }
 
     public static void checkValue(String value) throws KVException {
-        if (value == null || value.length() == 0)
+        if (value == null || value.isEmpty())
     		throw INVALID_VAL_RESP_EXCEPTION;
     	else if (value.length() > MAX_VAL_SIZE)
     		throw OVERSIZED_VAL_RESP_EXCEPTION;
