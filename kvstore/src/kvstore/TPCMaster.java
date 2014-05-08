@@ -119,12 +119,12 @@ public class TPCMaster {
     	if (key == null) {return null;}
     	long keyID = TPCMaster.hashTo64bit(key);
     	
-    	boolean x = TPCMaster.isLessThanUnsigned(keyID, slaveList.get(0).getSlaveID());
+    	boolean x = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(0).getSlaveID());
     	
     	int n = 0;
     	
     	for (int i = 1; i < slaveList.size(); i++) {
-    		boolean y = TPCMaster.isLessThanUnsigned(keyID, slaveList.get(i).getSlaveID());
+    		boolean y = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(i).getSlaveID());
     		if (x != y) {
     			n = i;
     			break;

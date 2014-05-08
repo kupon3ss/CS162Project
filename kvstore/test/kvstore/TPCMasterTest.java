@@ -43,13 +43,37 @@ public class TPCMasterTest {
 	
 	@Test
 	public void registerSlaveTest() {
-		TPCMaster temp = new TPCMaster(3, new KVCache(1,4));
-		TPCSlaveInfo slave0 = null, slave1 = null, slave2 = null, slave3 = null;
+		TPCMaster temp = new TPCMaster(3, new KVCache(1,4)) {
+			
+			@Override
+			public TPCSlaveInfo findFirstReplica(String key) {
+		        // implement me
+		    	if (key == null) {return null;}
+		    	long keyID = -1;
+		    	
+		    	boolean x = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(0).getSlaveID());
+		    	
+		    	int n = 0;
+		    	
+		    	for (int i = 1; i < slaveList.size(); i++) {
+		    		boolean y = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(i).getSlaveID());
+		    		if (x != y) {
+		    			n = i;
+		    			break;
+		    		}
+		    	}
+		    	
+		        return slaveList.get(n);
+		    }
+		};
+		
+		
+		TPCSlaveInfo slave0 = null, slave1 = null, slave2 = null, slave3 = null, slave4 = null;
 		try {
-			slave0 = new TPCSlaveInfo("10@hello:5050");
-			slave1 = new TPCSlaveInfo("20@hello:5060");
+			slave0 = new TPCSlaveInfo("40@hello:5050");
+			slave1 = new TPCSlaveInfo("10@hello:5060");
 			slave2 = new TPCSlaveInfo("30@hello:5070");
-			slave3 = new TPCSlaveInfo("40@hello:5080");
+			slave3 = new TPCSlaveInfo("20@hello:5080");
 		} catch (KVException e) {
 			
 		}
@@ -59,22 +83,32 @@ public class TPCMasterTest {
 			return;
 		}
 		
-		temp.registerSlave(slave0);
-		temp.registerSlave(slave1);
-		temp.registerSlave(slave2);
-		temp.registerSlave(slave3);
+		temp.registerSlave(slave0); //40
+		temp.registerSlave(slave1); //10
+		temp.registerSlave(slave2); //30
+		
+		temp.registerSlave(slave3); //extra slave
+		temp.registerSlave(slave4); //null slave, should do absolutely nothing
 		
 		//Test1
 		if (temp.slaveList.size() != 3) {
 			System.out.println("registerSlaveTest failed: Test1");
+		} else {
+			System.out.println("Test1 success");
 		}
 		
-		System.out.println("Success @registerSlaveTest");
-	}
-	
-	@Test
-	public void findTest() {
+		//Test2
+		TPCSlaveInfo dummy = temp.findFirstReplica("dummy");
+		System.out.println(dummy.getSlaveID());
+		if(temp.findFirstReplica("dummy").getSlaveID() != 10) {
+			System.out.println("registerSlaveTest failed: Test2");
+		} else {
+			System.out.println("Test2 success");
+		}
 		
+		//Test3
+		TPCSlaveInfo dummy2 = temp.findSuccessor(dummy);
+		System.out.println(dummy2.getSlaveID());
 	}
 	
 	@Test
