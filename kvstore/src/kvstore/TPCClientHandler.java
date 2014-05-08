@@ -31,6 +31,8 @@ public class TPCClientHandler implements NetworkHandler {
      */
     public TPCClientHandler(TPCMaster tpcMaster, int connections) {
         // implement me
+    	this.tpcMaster = tpcMaster;
+    	threadPool = new ThreadPool(connections);
     }
 
     /**
@@ -42,7 +44,8 @@ public class TPCClientHandler implements NetworkHandler {
     @Override
     public void handle(Socket client) {
         // implement me
-        threadPool.addJob(new ClientHandler(client));
+    	//object.notify
+    	threadPool.addJob(new ClientHandler(client));
     }
 
     /**

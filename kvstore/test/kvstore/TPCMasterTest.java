@@ -133,7 +133,7 @@ public class TPCMasterTest {
 		
 		//Test2
 		TPCSlaveInfo dummy = temp.findFirstReplica("dummy");
-		System.out.println(dummy.getSlaveID());
+		//System.out.println(dummy.getSlaveID());
 		if(dummy.getSlaveID() != 10) {
 			System.out.println("registerSlaveTest failed: Test2");
 		} else {
@@ -142,7 +142,7 @@ public class TPCMasterTest {
 		
 		//Test3
 		TPCSlaveInfo dummy2 = temp.findSuccessor(dummy);
-		System.out.println(dummy2.getSlaveID());
+		//System.out.println(dummy2.getSlaveID());
 		if(dummy2.getSlaveID() != 30) {
 			System.out.println("registerSlaveTest failed: Test3");
 		} else {

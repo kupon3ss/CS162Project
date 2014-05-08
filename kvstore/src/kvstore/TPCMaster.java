@@ -14,7 +14,7 @@ public class TPCMaster {
     private KVCache masterCache;
     
     public ArrayList<TPCSlaveInfo> slaveList;
-    //private LinkedList<TPCSlaveInfo> slaveList2;
+    boolean ready;
 
     public static final int TIMEOUT = 3000;
 
@@ -29,6 +29,7 @@ public class TPCMaster {
         this.masterCache = cache;
         // implement me
         slaveList = new ArrayList<TPCSlaveInfo>();
+        ready = false;
     }
 
     /**
@@ -65,6 +66,10 @@ public class TPCMaster {
 	    			slaveList.set(i, slave);
 	    		}
 	    	}
+    	}
+    	
+    	if (slaveList.size() >= numSlaves) {
+    		ready = true;
     	}
     }
 
