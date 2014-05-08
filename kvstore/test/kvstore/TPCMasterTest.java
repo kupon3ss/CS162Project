@@ -1,5 +1,8 @@
 package kvstore;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 import org.junit.*;
@@ -39,6 +42,20 @@ public class TPCMasterTest {
 		};
 		
 		return tpcMaster;
+	}
+	
+	/**
+	 * Use to fake an InputStream for a mocked socket;
+	 * 
+	 * @param fakeResponse - One of KVMessage.SET_TYPES
+	 * @return an InputStream from the XML of the KVMessage of our choosing
+	 * @throws KVException
+	 * @throws UnsupportedEncodingException
+	 */
+	private InputStream fakedResponse(String fakeResponse) throws KVException, UnsupportedEncodingException {
+		KVMessage toSend = new KVMessage(fakeResponse);
+		String fakedXML = toSend.toXML();
+		return new ByteArrayInputStream(fakedXML.getBytes("UTF-8"));
 	}
 
 	@Test
