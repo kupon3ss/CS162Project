@@ -2,6 +2,7 @@ package kvstore;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -9,6 +10,7 @@ import java.net.Socket;
 
 import org.junit.*;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class TPCMasterTest {
@@ -60,7 +62,7 @@ public class TPCMasterTest {
 	 * @throws KVException
 	 * @throws UnsupportedEncodingException
 	 */
-	private InputStream fakedResponse(String fakeResponse) throws KVException, UnsupportedEncodingException {
+	private InputStream fakedResponseStream(String fakeResponse) throws KVException, UnsupportedEncodingException {
 		KVMessage toSend = new KVMessage(fakeResponse);
 		String fakedXML = toSend.toXML();
 		return new ByteArrayInputStream(fakedXML.getBytes("UTF-8"));
@@ -71,9 +73,10 @@ public class TPCMasterTest {
 	 * 
 	 * @param masterEavesdropper - the ByteArrayOutputStream returned by a mocked socket
 	 * @return an XML string of a KVMessage
+	 * @throws UnsupportedEncodingException 
 	 */
-	private String eavesdroppedDecision(ByteArrayOutputStream masterEavesdropper) {
-		return "";
+	private String eavesdroppedDecision(ByteArrayOutputStream masterEavesdropper) throws UnsupportedEncodingException {
+		return new String(masterEavesdropper.toByteArray(), "UTF-8");
 	}
 
 	@Test
@@ -178,6 +181,31 @@ public class TPCMasterTest {
 	
 	@Test
 	public void slaveIndicatesFailureP1() {
+		
+		Socket mockSocket = mock(Socket.class);
+		ByteArrayOutputStream masterEavesdropper = new ByteArrayOutputStream();
+		try {
+			when(mockSocket.getInputStream()).thenReturn(fakedResponseStream(KVConstants.ABORT));
+			when(mockSocket.getOutputStream()).thenReturn(masterEavesdropper);
+		} catch (IOException | KVException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		TPCMaster testMaster = mockedSocketTPCMaster(mockSocket);
+		try {
+			//Test call - data should now be written to masterEavesdropper
+			KVMessage fakedPut = new KVMessage(KVConstants.PUT_REQ);
+			testMaster.handleTPCRequest(fakedPut, true);
+			//Abort decision to compare against
+			KVMessage abortDecision = new KVMessage(KVConstants.ABORT);
+			assertTrue(eavesdroppedDecision(masterEavesdropper) == abortDecision.toXML());
+		} catch (KVException kve) {
+			fail();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
 		
 	}
 	
