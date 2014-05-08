@@ -69,7 +69,7 @@ public class TPCMasterHandler implements NetworkHandler {
 	        registerSlave.sendMessage(master);
 	        
 	        KVMessage response = new KVMessage(master);
-	        if (response.getMsgType() != SUCCESS) {
+	        if (!response.getMessage().equals(SUCCESS)) {
 	        	throw new KVException(ERROR_INVALID_FORMAT);
 	        }
     	} catch (IOException e) {
