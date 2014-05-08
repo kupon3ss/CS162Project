@@ -125,6 +125,7 @@ public class TPCMasterHandler implements NetworkHandler {
                 		break;
                 		
                 	case DEL_REQ:
+                		
                 		response = handleDel(request);
                 		break;
                 		
@@ -221,6 +222,7 @@ public class TPCMasterHandler implements NetworkHandler {
 		private KVMessage handlePut(KVMessage request) throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
+				KVServer.checkKey(request.getKey());
 				tpcLog.appendAndFlush(request);
 				phase ++;
 				try {
@@ -236,6 +238,7 @@ public class TPCMasterHandler implements NetworkHandler {
 			
 			else if (phase == 2){
 		        try {
+		        	KVServer.checkKey(request.getKey());
 		            kvServer.put(request.getKey(), request.getValue());
 		            phase = 0;
 		            KVMessage response = new KVMessage(ACK);
@@ -255,6 +258,7 @@ public class TPCMasterHandler implements NetworkHandler {
 			// TODO Auto-generated method stub
 				if (kvServer.hasKey(request.getKey())){
 				try {
+					KVServer.checkKey(request.getKey());
 					KVMessage response = new KVMessage(RESP);
 					response.setKey(request.getKey());
 					response.setValue(kvServer.get(request.getKey()));
@@ -275,6 +279,7 @@ public class TPCMasterHandler implements NetworkHandler {
 		private KVMessage handleDel(KVMessage request) throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
+				KVServer.checkKey(request.getKey());
 				tpcLog.appendAndFlush(request);
 				phase ++;
 				try {
@@ -290,6 +295,7 @@ public class TPCMasterHandler implements NetworkHandler {
 			
 			else if (phase == 2){
 		        try {
+		        	KVServer.checkKey(request.getKey());
 		            kvServer.del(request.getKey());
 		            phase = 0;
 		            KVMessage response = new KVMessage(ACK);
