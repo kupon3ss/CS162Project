@@ -102,13 +102,12 @@ public class TPCMasterTest {
 		    }
 		};
 		
-		
 		TPCSlaveInfo slave0 = null, slave1 = null, slave2 = null, slave3 = null, slave4 = null;
 		try {
-			slave0 = new TPCSlaveInfo("40@hello:5050");
-			slave1 = new TPCSlaveInfo("10@hello:5060");
-			slave2 = new TPCSlaveInfo("30@hello:5070");
-			slave3 = new TPCSlaveInfo("20@hello:5080");
+			slave0 = new TPCSlaveInfo("40@hello1:5050");
+			slave1 = new TPCSlaveInfo("10@hello2:5060");
+			slave2 = new TPCSlaveInfo("30@hello3:5070");
+			slave3 = new TPCSlaveInfo("20@hello4:5080");
 		} catch (KVException e) {
 			
 		}
@@ -126,7 +125,7 @@ public class TPCMasterTest {
 		temp.registerSlave(slave4); //null slave, should do absolutely nothing
 		
 		//Test1
-		if (temp.slaveList.size() != 3) {
+		if (temp.slaveList.size() != 3 && temp.slaveList.get(0).getSlaveID() == 10) {
 			System.out.println("registerSlaveTest failed: Test1");
 		} else {
 			System.out.println("Test1 success");
@@ -135,7 +134,7 @@ public class TPCMasterTest {
 		//Test2
 		TPCSlaveInfo dummy = temp.findFirstReplica("dummy");
 		System.out.println(dummy.getSlaveID());
-		if(temp.findFirstReplica("dummy").getSlaveID() != 10) {
+		if(dummy.getSlaveID() != 10) {
 			System.out.println("registerSlaveTest failed: Test2");
 		} else {
 			System.out.println("Test2 success");
@@ -144,6 +143,32 @@ public class TPCMasterTest {
 		//Test3
 		TPCSlaveInfo dummy2 = temp.findSuccessor(dummy);
 		System.out.println(dummy2.getSlaveID());
+		if(dummy2.getSlaveID() != 30) {
+			System.out.println("registerSlaveTest failed: Test3");
+		} else {
+			System.out.println("Test3 success");
+		}
+		
+		//Test4
+		String temphostname = slave0.getHostname();
+		int tempport = slave0.getPort();
+		
+		try {
+			slave0 = new TPCSlaveInfo("40@hello1mod:5051");
+		} catch (KVException e) {
+			
+		}
+		
+		//System.out.println(slave0.getHostname());
+		//System.out.println(slave0.getPort());
+		//System.out.println(temphostname);
+		//System.out.println(tempport);
+		
+		if (slave0.getHostname().equals(temphostname) && tempport == slave0.getPort()) {
+			System.out.println("registerSlaveTest failed: Test4");
+		} else {
+			System.out.println("Test4 success");
+		}
 	}
 	
 	@Test
