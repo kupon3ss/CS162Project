@@ -13,7 +13,7 @@ public class TPCMaster {
     private int numSlaves;
     private KVCache masterCache;
     
-    private ArrayList<TPCSlaveInfo> slaveList;
+    public ArrayList<TPCSlaveInfo> slaveList;
     //private LinkedList<TPCSlaveInfo> slaveList2;
 
     public static final int TIMEOUT = 3000;
@@ -28,6 +28,7 @@ public class TPCMaster {
         this.numSlaves = numSlaves;
         this.masterCache = cache;
         // implement me
+        slaveList = new ArrayList<TPCSlaveInfo>();
     }
 
     /**
@@ -118,12 +119,12 @@ public class TPCMaster {
     	if (key == null) {return null;}
     	long keyID = TPCMaster.hashTo64bit(key);
     	
-    	boolean x = TPCMaster.isLessThanUnsigned(keyID, slaveList.get(0).getSlaveID());
+    	boolean x = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(0).getSlaveID());
     	
     	int n = 0;
     	
     	for (int i = 1; i < slaveList.size(); i++) {
-    		boolean y = TPCMaster.isLessThanUnsigned(keyID, slaveList.get(i).getSlaveID());
+    		boolean y = TPCMaster.isLessThanEqualUnsigned(keyID, slaveList.get(i).getSlaveID());
     		if (x != y) {
     			n = i;
     			break;

@@ -50,7 +50,12 @@ public class KVServer implements KeyValueInterface {
     	else if (value.length() > MAX_VAL_SIZE)
     		throw OVERSIZED_VAL_RESP_EXCEPTION;
     }
-
+    
+    public void wipeEverything() {
+    	dataCache.freshCache();
+    	dataStore.resetStore();
+    }
+    
     /**
      * Performs put request on cache and store.
      *

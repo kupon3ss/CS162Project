@@ -35,13 +35,22 @@ public class KVCache implements KeyValueInterface {
      * @param maxElemsPerSet the size of each set
      */
     public KVCache(int numSets, int maxElemsPerSet) {
-    	cache = new ArrayList<LinkedList<CacheEntry>>();
+    	cache = new ArrayList<LinkedList<CacheEntry>>(numSets);
     	locks = new ReentrantLock[numSets];
     	for (int i = 0; i < numSets; i++) {
     		cache.add(new LinkedList<CacheEntry>());
     		locks[i] = new ReentrantLock();
     	}
     	this.maxElemsPerSet = maxElemsPerSet;
+    }
+
+    public void freshCache() {
+    	int numSets = cache.size();
+        cache = new ArrayList<LinkedList<CacheEntry>>(numSets);
+        for (int i = 0; i < numSets; i++) {
+    		cache.add(new LinkedList<CacheEntry>());
+    		locks[i] = new ReentrantLock();
+    	}
     }
     
     /**
