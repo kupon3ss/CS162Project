@@ -12,7 +12,7 @@ public class TPCLogTest {
     public void rebuildTest() {
     	try {
     		KVServer server;
-    		TPCLog log = new TPCLog("something", new KVServer(1, 4));
+    		TPCLog log = new TPCLog("rebuildTest", new KVServer(1, 4));
     		KVMessage request = new KVMessage(KVConstants.PUT_REQ);
     		KVMessage decision = new KVMessage(KVConstants.COMMIT);
     		request.setKey("foo");

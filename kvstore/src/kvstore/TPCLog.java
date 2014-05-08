@@ -123,18 +123,18 @@ public class TPCLog {
     		kvServer.wipeEverything();
     		KVMessage request = null;
     		for (KVMessage log: entries) {
-    			if (log.getMsgType() == PUT_REQ || log.getMsgType() == DEL_REQ) {
+    			if (log.getMsgType().equals(PUT_REQ) || log.getMsgType().equals(DEL_REQ)) {
     				request = log;
-    			} else if (log.getMsgType() == COMMIT) {
+    			} else if (log.getMsgType().equals(COMMIT)) {
     				if (request == null) {
     					//Do nothing. If reached here, repeated COMMIT
     					continue;
-    				} else if (request.getMsgType() == PUT_REQ) {
+    				} else if (request.getMsgType().equals(PUT_REQ)) {
     					kvServer.put(request.getKey(), request.getValue());
-    				} else if (request.getMsgType() == DEL_REQ) {
+    				} else if (request.getMsgType().equals(DEL_REQ)) {
     					kvServer.del(request.getKey());
     				}
-    			} else if (log.getMsgType() == ABORT) {
+    			} else if (log.getMsgType().equals(ABORT)) {
     				request = null;
     			}
     		}

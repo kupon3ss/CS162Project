@@ -15,6 +15,9 @@ public class TPCMasterHandler implements NetworkHandler {
     private TPCLog tpcLog;
     private ThreadPool threadpool;
     private int phase;
+    
+    private String masterHostname;
+    private SocketServer ss;
 
     /**
      * Constructs a TPCMasterHandler with one connection in its ThreadPool
@@ -57,9 +60,12 @@ public class TPCMasterHandler implements NetworkHandler {
      */
     public void registerWithMaster(String masterHostname, SocketServer server)
             throws KVException {
+    	this.masterHostname = masterHostname;
+    	this.ss = server;
+    	Socket master = null;
     	try {
 	        KVMessage registerSlave = new KVMessage(REGISTER, slaveID+"@"+server.getHostname()+":"+server.getPort());
-	        Socket master = new Socket(masterHostname, 9090);
+	        master = new Socket(masterHostname, 9090);
 	        registerSlave.sendMessage(master);
 	        
 	        KVMessage response = new KVMessage(master);
@@ -68,6 +74,12 @@ public class TPCMasterHandler implements NetworkHandler {
 	        }
     	} catch (IOException e) {
     		throw new KVException(ERROR_INVALID_FORMAT);
+    	} finally {
+    		try {
+    			master.close();
+    		} catch (IOException ioe) {
+    			//Best effort to close
+    		}
     	}
     }
 
