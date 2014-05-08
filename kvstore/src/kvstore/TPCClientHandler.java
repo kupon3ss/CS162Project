@@ -44,7 +44,6 @@ public class TPCClientHandler implements NetworkHandler {
     @Override
     public void handle(Socket client) {
         // implement me
-
     	threadPool.addJob(new ClientHandler(client));
     }
 
@@ -72,6 +71,13 @@ public class TPCClientHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
+            while (!tpcMaster.ready()) {
+                try {
+                    tpcMaster.wait();
+                } catch (InterruptedException ie) {
+                    // ignore and try waiting
+                }
+            }
         	KVMessage response;
         	try {
         		KVMessage request = new KVMessage(client);

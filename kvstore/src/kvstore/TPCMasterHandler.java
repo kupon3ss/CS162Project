@@ -83,6 +83,13 @@ public class TPCMasterHandler implements NetworkHandler {
     	}
     }
 
+    private void reRegister() {
+        try {
+            tpcLog.rebuildServer();
+            registerWithMaster(masterHostname, ss);
+        } catch (KVException kve) {}
+    }
+
     /**
      * Creates a job to service the request on a socket and enqueues that job
      * in the thread pool. Ignore any InterruptedExceptions.
@@ -231,7 +238,7 @@ public class TPCMasterHandler implements NetworkHandler {
 			return request;
 		}
 
-		private KVMessage handlePut(KVMessage request) throws KVException {
+		private KVMessage handlePut(KVMessage request) {//throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
 				KVServer.checkKey(request.getKey());

@@ -65,13 +65,11 @@ public class TPCMaster {
 	    		}
 	    	}
     	}
+        if (ready()) this.notifyAll();
     }
 
     public boolean ready() {
-    	if (slaveList.size() == numSlaves) {
-    		return true;
-    	}
-    	return false;
+    	return slaveList.size() == numSlaves;
     }
     
     /**
@@ -180,6 +178,7 @@ public class TPCMaster {
         // implement me
         String key = msg.getKey();
         KVServer.checkKey(key); // pass exception on to caller
+        if (isPutReq) KVServer.checkValue(msg.getValue()); //pass exception to caller
 
         // lock the master cache set for this key to block GET requests
         Lock setLock = masterCache.getLock(key);
