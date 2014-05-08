@@ -215,6 +215,20 @@ public class TPCMasterHandler implements NetworkHandler {
 				tpcLog.appendAndFlush(request);
 				Handshakestate ++;
 			}
+			
+			else if(Handshakestate == 2){
+				if (kvServer.hasKey(request.getKey())){
+				try {
+					KVMessage response = new KVMessage(RESP);
+					response.setKey(request.getKey());
+					response.setValue(kvServer.get(request.getKey()));
+					response.sendMessage(master);
+				} catch (KVException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			}
 
 			
 		}
