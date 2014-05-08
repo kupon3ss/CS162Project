@@ -126,9 +126,6 @@ public class TPCMasterHandler implements NetworkHandler {
         	KVMessage response = null;
         	try {
         		request = new KVMessage(master);
-        	} catch (KVException kve) {
-        		response = kve.getKVMessage();
-        	}
                 switch (request.getMsgType()) {
                 	case GET_REQ:
                 		
@@ -140,6 +137,7 @@ public class TPCMasterHandler implements NetworkHandler {
                 		break;
                 		
                 	case DEL_REQ:
+                		
                 		response = handleDel(request);
                 		break;
                 		
@@ -156,6 +154,9 @@ public class TPCMasterHandler implements NetworkHandler {
                     default: // should never happen, but in case a client were to send some other message
                         response = new KVMessage(RESP, ERROR_INVALID_REQUEST);
                 }
+        	} catch (KVException kve) {
+        		response = kve.getKVMessage();
+        	}
 
     		try {
     			response.sendMessage(master);
@@ -192,7 +193,7 @@ public class TPCMasterHandler implements NetworkHandler {
 
 		}
 
-		private KVMessage handleCommit(KVMessage request) {
+		private KVMessage handleCommit(KVMessage request) throws KVException {
 			// TODO Auto-generated method stub
 			// state2 is if commit was received but action has not made yet
 			if(phase == 1 || phase == 2){
@@ -201,7 +202,7 @@ public class TPCMasterHandler implements NetworkHandler {
 				if (lastMessage.getMsgType() == DEL_REQ){
 					handleDel(lastMessage);
 				}
-				else if (lastMessage.getMsgType() == DEL_REQ){
+				else if (lastMessage.getMsgType() == PUT_REQ){
 					handlePut(lastMessage);
 				}				
 				tpcLog.appendAndFlush(request);
@@ -209,7 +210,8 @@ public class TPCMasterHandler implements NetworkHandler {
 				KVMessage response = new KVMessage(ACK);
 				return response;
 			} catch (KVException e) {
-                KVMessage ErrorResponse = e.getKVMessage();
+                KVMessage ErrorResponse = new KVMessage(ABORT);
+                ErrorResponse.setMessage(e.getKVMessage().getMessage());
                 return ErrorResponse;
 			}
 			
@@ -220,7 +222,8 @@ public class TPCMasterHandler implements NetworkHandler {
 				KVMessage response = new KVMessage(ACK);
 				return response;
 			} catch (KVException e) {
-                KVMessage ErrorResponse = e.getKVMessage();
+                KVMessage ErrorResponse = new KVMessage(ABORT);
+                ErrorResponse.setMessage(e.getKVMessage().getMessage());
                 return ErrorResponse;
 			}
 		}
@@ -228,16 +231,18 @@ public class TPCMasterHandler implements NetworkHandler {
 			return request;
 		}
 
-		private KVMessage handlePut(KVMessage request) {
+		private KVMessage handlePut(KVMessage request) throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
+				KVServer.checkKey(request.getKey());
 				tpcLog.appendAndFlush(request);
 				phase ++;
 				try {
 					KVMessage response = new KVMessage(READY);
 					return response;
 				} catch (KVException e) {
-	                KVMessage ErrorResponse = e.getKVMessage();
+	                KVMessage ErrorResponse = new KVMessage(ABORT);
+	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
 					return ErrorResponse;
 
 				}
@@ -245,12 +250,14 @@ public class TPCMasterHandler implements NetworkHandler {
 			
 			else if (phase == 2){
 		        try {
+		        	KVServer.checkKey(request.getKey());
 		            kvServer.put(request.getKey(), request.getValue());
 		            phase = 0;
 		            KVMessage response = new KVMessage(ACK);
 		            return response;
 		        } catch (KVException e) {
-	                KVMessage ErrorResponse = e.getKVMessage();
+	                KVMessage ErrorResponse = new KVMessage(ABORT);
+	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
 					return ErrorResponse;
 					}
 		            	
@@ -263,6 +270,7 @@ public class TPCMasterHandler implements NetworkHandler {
 			// TODO Auto-generated method stub
 				if (kvServer.hasKey(request.getKey())){
 				try {
+					KVServer.checkKey(request.getKey());
 					KVMessage response = new KVMessage(RESP);
 					response.setKey(request.getKey());
 					response.setValue(kvServer.get(request.getKey()));
@@ -280,16 +288,18 @@ public class TPCMasterHandler implements NetworkHandler {
 				}
 			
 
-		private KVMessage handleDel(KVMessage request) {
+		private KVMessage handleDel(KVMessage request) throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
+				KVServer.checkKey(request.getKey());
 				tpcLog.appendAndFlush(request);
 				phase ++;
 				try {
 					KVMessage response = new KVMessage(READY);
 					return response;
 				} catch (KVException e) {
-	                KVMessage ErrorResponse = e.getKVMessage();
+	                KVMessage ErrorResponse = new KVMessage(ABORT);
+	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
 					return ErrorResponse;
 				}
 
@@ -297,12 +307,14 @@ public class TPCMasterHandler implements NetworkHandler {
 			
 			else if (phase == 2){
 		        try {
+		        	KVServer.checkKey(request.getKey());
 		            kvServer.del(request.getKey());
 		            phase = 0;
 		            KVMessage response = new KVMessage(ACK);
 		            return response;
 		        } catch (KVException e) {
-	                KVMessage ErrorResponse = e.getKVMessage();
+	                KVMessage ErrorResponse = new KVMessage(ABORT);
+	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
 						return ErrorResponse;
 		            }
 			}
