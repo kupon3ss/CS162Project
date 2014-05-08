@@ -45,9 +45,12 @@ public class KVCache implements KeyValueInterface {
     }
 
     public void freshCache() {
-        cache = new ArrayList<LinkedList<CacheEntry>>(cache.size());
-        for (LinkedList<CacheEntry> entry : cache)
-            cache.add(new LinkedList<CacheEntry>());
+    	int numSets = cache.size();
+        cache = new ArrayList<LinkedList<CacheEntry>>(numSets);
+        for (int i = 0; i < numSets; i++) {
+    		cache.add(new LinkedList<CacheEntry>());
+    		locks[i] = new ReentrantLock();
+    	}
     }
     
     /**
