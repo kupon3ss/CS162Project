@@ -67,7 +67,7 @@ public class TPCMasterHandler implements NetworkHandler {
 	        	throw new KVException(ERROR_INVALID_FORMAT);
 	        }
     	} catch (IOException e) {
-    		
+    		throw new KVException(ERROR_INVALID_FORMAT);
     	}
     }
 

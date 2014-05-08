@@ -23,6 +23,7 @@ public class TPCSlaveInfo {
      */
     public TPCSlaveInfo(String info) throws KVException {
         // implement me
+    	/*
     	Pattern getID = Pattern.compile("(.+)@");
     	Pattern getPort = Pattern.compile(":(.+)");
     	Pattern getHostname = Pattern.compile("@(.+):");
@@ -55,9 +56,9 @@ public class TPCSlaveInfo {
     	} else {
     		throw new KVException(ERROR_INVALID_FORMAT);
     	}
-    	
+    	*/
     	//This works too and covers all cases. Not as clean though. 
-    	/* 
+    	
     	String[] parts0 = info.split("@");
     	String[] parts1 = parts0[1].split(":");
     	
@@ -68,18 +69,31 @@ public class TPCSlaveInfo {
     	try {
     		this.slaveID = new Long(parts0[0]);
     	} catch (NumberFormatException nfe) {
-    			throw new KVException(ERROR_INVALID_FORMAT);
+    		throw new KVException(ERROR_INVALID_FORMAT);
+    	} catch (ArrayIndexOutOfBoundsException aiobe) {
+    		throw new KVException(ERROR_INVALID_FORMAT);
     	}
     	
     	try {
-    		this.port = new Long(parts1[1]);
-    	} catch (NumberFormatException nfe) {
+    		this.port = (new Integer(parts1[1])).intValue();
+    		if (this.port < 0) {
     			throw new KVException(ERROR_INVALID_FORMAT);
+    		}
+    	} catch (NumberFormatException nfe) {
+    		throw new KVException(ERROR_INVALID_FORMAT);
+    	} catch (ArrayIndexOutOfBoundsException aiobe) {
+    		throw new KVException(ERROR_INVALID_FORMAT);
     	}
     	
-    	this.hostname = parts1[1];
-    	 */
-    	
+    	try {
+    		if (parts1[0].isEmpty()) {
+    			throw new KVException(ERROR_INVALID_FORMAT);
+    		}
+    		this.hostname = parts1[0];
+    	} catch (ArrayIndexOutOfBoundsException aiobe) {
+    		throw new KVException(ERROR_INVALID_FORMAT);
+    	}
+    	 
     }
 
     public long getSlaveID() {
@@ -104,7 +118,7 @@ public class TPCSlaveInfo {
     public Socket connectHost(int timeout) throws KVException {
         // implement me
     	Socket sock = new Socket();
-    	ServerSocket server;
+    	ServerSocket server = null;
     	try {
 	    	server = new ServerSocket(getPort());
     	} catch (IOException ioe) {
@@ -117,6 +131,7 @@ public class TPCSlaveInfo {
     	} catch (IOException ioe) {
     		throw new KVException(ERROR_COULD_NOT_CONNECT);
     	} 
+
         return sock;
     }
 
