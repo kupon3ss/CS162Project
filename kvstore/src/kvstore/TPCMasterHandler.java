@@ -165,9 +165,14 @@ public class TPCMasterHandler implements NetworkHandler {
 		private void handleAbort(KVMessage request) {
 			// TODO Auto-generated method stub
 			try {
-				KVMessage response = new KVMessage("abort");
+				KVMessage lastMessage = tpcLog.getLastEntry();
+				if (lastMessage.getMsgType() == DEL_REQ || lastMessage.getMsgType() == PUT_REQ){
+		            tpcLog.appendAndFlush(request);
+		            Handshakestate = 0;
+				}
+				KVMessage response = new KVMessage("ack");
 				response.sendMessage(master);
-	            tpcLog.appendAndFlush(request);
+				
 			} catch (KVException e) {
                 KVMessage ErrorResponse = e.getKVMessage();
                 try {
