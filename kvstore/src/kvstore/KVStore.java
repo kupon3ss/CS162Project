@@ -49,7 +49,7 @@ public class KVStore implements KeyValueInterface {
         resetStore();
     }
 
-    private void resetStore() {
+    public void resetStore() {
         this.store = new ConcurrentHashMap<String, String>();
     }
 
