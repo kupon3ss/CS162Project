@@ -14,7 +14,6 @@ public class TPCMaster {
     private KVCache masterCache;
     
     public ArrayList<TPCSlaveInfo> slaveList;
-    boolean ready;
 
     public static final int TIMEOUT = 3000;
 
@@ -29,7 +28,6 @@ public class TPCMaster {
         this.masterCache = cache;
         // implement me
         slaveList = new ArrayList<TPCSlaveInfo>();
-        ready = false;
     }
 
     /**
@@ -67,12 +65,15 @@ public class TPCMaster {
 	    		}
 	    	}
     	}
-    	
-    	if (slaveList.size() >= numSlaves) {
-    		ready = true;
-    	}
     }
 
+    public boolean ready() {
+    	if (slaveList.size() == numSlaves) {
+    		return true;
+    	}
+    	return false;
+    }
+    
     /**
      * Converts Strings to 64-bit longs. Borrowed from http://goo.gl/le1o0W,
      * adapted from String.hashCode().

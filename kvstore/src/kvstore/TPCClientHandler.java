@@ -44,7 +44,7 @@ public class TPCClientHandler implements NetworkHandler {
     @Override
     public void handle(Socket client) {
         // implement me
-    	//object.notify
+
     	threadPool.addJob(new ClientHandler(client));
     }
 
