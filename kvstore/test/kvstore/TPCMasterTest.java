@@ -10,19 +10,18 @@ public class TPCMasterTest {
 	
 	private static int TIMEDOUT = TPCMaster.TIMEOUT + 5;
 	
-	private TPCMaster mockedSocketTPCMaster(final Socket mockSocket, final boolean isPhase1) {
+	private TPCMaster mockedSocketTPCMaster(final Socket mockSocket) {
+		
+		//Return a tpcMaster that has been modified to use partially mocked TPCSlaveInfo, that themselves operate on mocked sockets of our choosing
 		TPCMaster tpcMaster = new TPCMaster(2, new KVCache(1, 4)) {
-			
-			boolean phase = isPhase1;
 			
 			@Override
 			public TPCSlaveInfo findFirstReplica(String s) {
 				TPCSlaveInfo mockSlaveInfo = mock(TPCSlaveInfo.class);
 				try {
 					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocket);
-				} catch (KVException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (KVException kve) {
+					kve.printStackTrace();
 				}
 				return mockSlaveInfo;
 			}
@@ -32,9 +31,8 @@ public class TPCMasterTest {
 				TPCSlaveInfo mockSlaveInfo = mock(TPCSlaveInfo.class);
 				try {
 					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocket);
-				} catch (KVException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (KVException kve) {
+					kve.printStackTrace();
 				}
 				return mockSlaveInfo;
 			}
@@ -63,4 +61,14 @@ public class TPCMasterTest {
 		
 	}
 	
+	/* From the spec;
+	 * "if the master receives anything besides an ACK [in phase 2], 
+	 * throw a KVException ERROR_INVALID_FORMAT and return this to the client"
+	 */
+	@Test
+	public void masterReceivesInvalidFormatP2() {
+		
+	}
+	
+	//thenCallRealMethod()
 }
