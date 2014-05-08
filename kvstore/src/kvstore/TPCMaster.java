@@ -13,7 +13,7 @@ public class TPCMaster {
     private int numSlaves;
     private KVCache masterCache;
     
-    private ArrayList<TPCSlaveInfo> slaveList;
+    public ArrayList<TPCSlaveInfo> slaveList;
     //private LinkedList<TPCSlaveInfo> slaveList2;
 
     public static final int TIMEOUT = 3000;
@@ -28,6 +28,7 @@ public class TPCMaster {
         this.numSlaves = numSlaves;
         this.masterCache = cache;
         // implement me
+        slaveList = new ArrayList<TPCSlaveInfo>();
     }
 
     /**

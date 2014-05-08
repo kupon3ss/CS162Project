@@ -40,7 +40,43 @@ public class TPCMasterTest {
 		
 		return tpcMaster;
 	}
-
+	
+	@Test
+	public void registerSlaveTest() {
+		TPCMaster temp = new TPCMaster(3, new KVCache(1,4));
+		TPCSlaveInfo slave0 = null, slave1 = null, slave2 = null, slave3 = null;
+		try {
+			slave0 = new TPCSlaveInfo("10@hello:5050");
+			slave1 = new TPCSlaveInfo("20@hello:5060");
+			slave2 = new TPCSlaveInfo("30@hello:5070");
+			slave3 = new TPCSlaveInfo("40@hello:5080");
+		} catch (KVException e) {
+			
+		}
+		
+		if (slave0 == null || slave1 == null || slave2 == null || slave3 == null) {
+			System.out.println("failed to construct slaves @registerSlaveTest");
+			return;
+		}
+		
+		temp.registerSlave(slave0);
+		temp.registerSlave(slave1);
+		temp.registerSlave(slave2);
+		temp.registerSlave(slave3);
+		
+		//Test1
+		if (temp.slaveList.size() != 3) {
+			System.out.println("registerSlaveTest failed: Test1");
+		}
+		
+		System.out.println("Success @registerSlaveTest");
+	}
+	
+	@Test
+	public void findTest() {
+		
+	}
+	
 	@Test
 	public void slaveTimesOutTestP1() {
 		
