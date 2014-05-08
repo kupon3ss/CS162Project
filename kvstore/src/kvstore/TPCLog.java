@@ -118,16 +118,21 @@ public class TPCLog {
      */
     public void rebuildServer() throws KVException {
         // implement me
-    	ObjectInputStream rebuild;
+    	//ObjectInputStream rebuild;
     	try {
-    		rebuild = new ObjectInputStream(new FileInputStream(new File(logPath)));
-    		ArrayList<KVMessage> logs = (ArrayList<KVMessage>) rebuild.readObject();
+    		//rebuild = new ObjectInputStream(new FileInputStream(new File(logPath)));
+    		//ArrayList<KVMessage> logs = (ArrayList<KVMessage>) rebuild.readObject();
+    		loadFromDisk();
+    		//kvServer = new KVServer();
     		KVMessage request = null;
-    		for (KVMessage log: logs) {
+    		for (KVMessage log: entries) {
     			if (log.getMsgType() == PUT_REQ || log.getMsgType() == DEL_REQ) {
     				request = log;
     			} else if (log.getMsgType() == COMMIT) {
-    				if (request.getMsgType() == PUT_REQ) {
+    				if (request == null) {
+    					//Do nothing. If reached here, repeated COMMIT
+    					continue;
+    				} else if (request.getMsgType() == PUT_REQ) {
     					kvServer.put(request.getKey(), request.getValue());
     				} else if (request.getMsgType() == DEL_REQ) {
     					kvServer.del(request.getKey());
@@ -136,7 +141,7 @@ public class TPCLog {
     				request = null;
     			}
     		}
-    		rebuild.close();
+    		//rebuild.close();
     	} catch (Exception e) {
     		throw new KVException("Error: Rebuild failed");
     	} 
