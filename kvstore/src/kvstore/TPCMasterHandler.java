@@ -181,7 +181,8 @@ public class TPCMasterHandler implements NetworkHandler {
 
 		private void handleCommit(KVMessage request) {
 			// TODO Auto-generated method stub
-			if(Handshakestate == 1){
+			// state2 is if commit was received but action has not made yet
+			if(Handshakestate == 1 || Handshakestate == 2){
 				Handshakestate = 2;
 				KVMessage lastMessage = tpcLog.getLastEntry();
 				if (lastMessage.getMsgType() == DEL_REQ){
