@@ -241,17 +241,30 @@ public class TPCMasterHandler implements NetworkHandler {
 		private KVMessage handlePut(KVMessage request) {//throws KVException {
 			// TODO Auto-generated method stub
 			if(phase == 0){
-				KVServer.checkKey(request.getKey());
+				try {
+					KVServer.checkKey(request.getKey());
+				} catch (KVException e) {
+					try {
+		                KVMessage ErrorResponse = new KVMessage(ABORT);
+		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
+						return ErrorResponse;
+					} catch (KVException kve) {
+						//Best effort abort
+					}
+				}
 				tpcLog.appendAndFlush(request);
 				phase ++;
 				try {
 					KVMessage response = new KVMessage(READY);
 					return response;
 				} catch (KVException e) {
-	                KVMessage ErrorResponse = new KVMessage(ABORT);
-	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-					return ErrorResponse;
-
+					try {
+		                KVMessage ErrorResponse = new KVMessage(ABORT);
+		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
+						return ErrorResponse;
+					} catch (KVException kve) {
+						//Best effort abort
+					}
 				}
 			}
 			
@@ -263,12 +276,15 @@ public class TPCMasterHandler implements NetworkHandler {
 		            KVMessage response = new KVMessage(ACK);
 		            return response;
 		        } catch (KVException e) {
-	                KVMessage ErrorResponse = new KVMessage(ABORT);
-	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-					return ErrorResponse;
+		        	try {
+		                KVMessage ErrorResponse = new KVMessage(ABORT);
+		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
+						return ErrorResponse;
+					} catch (KVException kve) {
+						//Best effort abort
 					}
-		            	
-		            }
+				}      	
+		    }
 			//should never get here
 			return request;
 		}
