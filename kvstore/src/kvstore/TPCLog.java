@@ -139,7 +139,7 @@ public class TPCLog {
     			}
     		}
     	} catch (Exception e) {
-    		throw new KVException("Error: Rebuild failed");
+    		//throw new KVException("Error: Rebuild failed");
     	} 
     	
     }

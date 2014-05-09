@@ -197,12 +197,15 @@ public class TPCMaster {
             boolean ready = firstResponse.equals(READY) && secondResponse.equals(READY);
 
             // phase-2
+            firstSocket = firstSlave.connectHost(TIMEOUT);
+            secondSocket = secondSlave.connectHost(TIMEOUT);
+            String value = msg.getValue();
             msg = new KVMessage(ready ? COMMIT : ABORT);
             doTPCPhase2(msg, firstSocket);
             doTPCPhase2(msg, secondSocket);
 
             // put/del from master cache upon success
-            if (isPutReq) masterCache.put(key, msg.getValue());
+            if (isPutReq) masterCache.put(key, value);
             else masterCache.del(key);
 
         } finally {
