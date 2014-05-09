@@ -14,8 +14,12 @@ public class TPCEndToEndTest extends TPCEndToEndTemplate {
     
     @Test(timeout = 15000)
     public void testPutDel() throws KVException {
-        client.put("foo", "bar");
-        client.del("foo");
-        assertEquals("del failed", client.get("foo"), KVConstants.ERROR_NO_SUCH_KEY);
+    	try {
+	        client.put("foo", "bar");
+	        client.del("foo");
+	        client.get("foo");
+    	} catch (KVException kve) {
+    		assertEquals("del failed",  KVConstants.ERROR_NO_SUCH_KEY, kve.getKVMessage().getMessage());
+    	}
     }
 }
