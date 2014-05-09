@@ -76,7 +76,8 @@ public class TPCMasterTest {
 	 * @throws UnsupportedEncodingException 
 	 */
 	private String eavesdroppedDecision(ByteArrayOutputStream masterEavesdropper) throws UnsupportedEncodingException {
-		return new String(masterEavesdropper.toByteArray(), "UTF-8");
+		//return new String(masterEavesdropper.toByteArray(), "UTF-8");
+		return masterEavesdropper.toString("UTF-8");
 	}
 
 	@Test
@@ -176,7 +177,7 @@ public class TPCMasterTest {
 	
 	@Test
 	public void slaveTimesOutTestP1() {
-		
+		fail();
 	}
 	
 	@Test
@@ -195,11 +196,22 @@ public class TPCMasterTest {
 		try {
 			//Test call - data should now be written to masterEavesdropper
 			KVMessage fakedPut = new KVMessage(KVConstants.PUT_REQ);
+			fakedPut.setKey("foo");
+			fakedPut.setValue("bar");
+			
 			testMaster.handleTPCRequest(fakedPut, true);
+			
 			//Abort decision to compare against
 			KVMessage abortDecision = new KVMessage(KVConstants.ABORT);
-			assertTrue(eavesdroppedDecision(masterEavesdropper) == abortDecision.toXML());
+			String decisionXML = abortDecision.toXML();
+			System.out.println(decisionXML);
+			String eavesdroppedDecisionXML = eavesdroppedDecision(masterEavesdropper);
+			System.out.println(eavesdroppedDecisionXML);
+			assertTrue(decisionXML.equals(eavesdroppedDecisionXML));
+			
 		} catch (KVException kve) {
+			System.out.println("KVException in slaveIndicatesFailureP1: " + kve.getKVMessage().getMessage());
+			kve.printStackTrace();
 			fail();
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -211,12 +223,12 @@ public class TPCMasterTest {
 	
 	@Test
 	public void slaveTimesOutP2() {
-		
+		fail();
 	}
 	
 	@Test
 	public void slaveIndicatesFailureP2() {
-		
+		fail();
 	}
 	
 	/* From the spec;
@@ -225,7 +237,7 @@ public class TPCMasterTest {
 	 */
 	@Test
 	public void masterReceivesInvalidFormatP2() {
-		
+		fail();
 	}
 	
 	//thenCallRealMethod()
