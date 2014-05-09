@@ -128,14 +128,14 @@ public class TPCMasterTest {
 		temp.registerSlave(slave3); //extra slave
 		temp.registerSlave(slave4); //null slave, should do absolutely nothing
 		
-		//Test1
+		//Test1 - registering invalid slaves
 		if (temp.slaveList.size() != 3 && temp.slaveList.get(0).getSlaveID() == 10) {
 			System.out.println("registerSlaveTest failed: Test1");
 		} else {
 			System.out.println("Test1 success");
 		}
 		
-		//Test2
+		//Test2 - findfirstreplica
 		TPCSlaveInfo dummy = temp.findFirstReplica("dummy");
 		//System.out.println(dummy.getSlaveID());
 		if(dummy.getSlaveID() != 10) {
@@ -144,7 +144,7 @@ public class TPCMasterTest {
 			System.out.println("Test2 success");
 		}
 		
-		//Test3
+		//Test3 - findsecondreplica
 		TPCSlaveInfo dummy2 = temp.findSuccessor(dummy);
 		//System.out.println(dummy2.getSlaveID());
 		if(dummy2.getSlaveID() != 30) {
@@ -153,7 +153,7 @@ public class TPCMasterTest {
 			System.out.println("Test3 success");
 		}
 		
-		//Test4
+		//Test4 - reregister a slave
 		String temphostname = slave0.getHostname();
 		int tempport = slave0.getPort();
 		
