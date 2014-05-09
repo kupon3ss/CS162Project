@@ -290,8 +290,7 @@ public class TPCMasterHandler implements NetworkHandler {
 		}
 
 		private KVMessage handleGet(KVMessage request) {
-			// TODO Auto-generated method stub
-				if (kvServer.hasKey(request.getKey())){
+			if (kvServer.hasKey(request.getKey())){
 				try {
 					KVServer.checkKey(request.getKey());
 					KVMessage response = new KVMessage(RESP);
@@ -303,12 +302,11 @@ public class TPCMasterHandler implements NetworkHandler {
 	                return ErrorResponse;
 				}
 			}
-				else {
-					KVMessage response = new KVMessage(RESP,"Key not found Error");
-					return response;
-					}
-
-				}
+			else {
+				KVMessage response = new KVMessage(RESP, ERROR_NO_SUCH_KEY);
+				return response;
+            }
+		}
 			
 
 		private KVMessage handleDel(KVMessage request) throws KVException {

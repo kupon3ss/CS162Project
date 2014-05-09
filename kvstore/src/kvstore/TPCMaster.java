@@ -194,7 +194,7 @@ public class TPCMaster {
             // phase-1
             String firstResponse = doTPCPhase1(msg, firstSocket);
             String secondResponse = doTPCPhase1(msg, secondSocket);
-            boolean ready = firstResponse.equals(READY) && secondResponse.equals(READY);
+            boolean ready = firstResponse.equals(READY) && secondResponse.equals(READY); // handle case where can't send to either slave.
 
             // phase-2
             firstSocket = firstSlave.connectHost(TIMEOUT);
@@ -202,7 +202,7 @@ public class TPCMaster {
             String value = msg.getValue();
             msg = new KVMessage(ready ? COMMIT : ABORT);
             doTPCPhase2(msg, firstSocket);
-            doTPCPhase2(msg, secondSocket);
+            doTPCPhase2(msg, secondSocket); // handle case where
 
             // put/del from master cache upon success
             if (isPutReq) masterCache.put(key, value);
@@ -296,6 +296,9 @@ public class TPCMaster {
             slaveSocket = slave.connectHost(TIMEOUT);
             msg.sendMessage(slaveSocket);
             KVMessage response = new KVMessage(slaveSocket);
+            if (response.getMessage() != null) {
+                throw new KVException(response.getMessage());
+            }
             //assert response.getKey().equals(msg.getKey());
             return response.getValue();
         } finally {
