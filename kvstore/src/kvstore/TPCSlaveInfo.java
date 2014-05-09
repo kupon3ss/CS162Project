@@ -118,20 +118,14 @@ public class TPCSlaveInfo {
     public Socket connectHost(int timeout) throws KVException {
         // implement me
     	Socket sock = new Socket();
-    	ServerSocket server = null;
+    	
     	try {
-	    	server = new ServerSocket(getPort());
-    	} catch (IOException ioe) {
-    		throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
-    	}
-    	try {
-    		sock.connect(server.getLocalSocketAddress(), timeout);
+    		sock.connect(new InetSocketAddress(getPort()), timeout);
     	} catch (SocketTimeoutException ste) {
     		throw new KVException(ERROR_SOCKET_TIMEOUT);
     	} catch (IOException ioe) {
     		throw new KVException(ERROR_COULD_NOT_CONNECT);
     	} 
-
         return sock;
     }
 
