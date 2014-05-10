@@ -178,11 +178,44 @@ public class TPCMasterTest {
 		}
 	}
 	
+	/*
 	@Test
 	public void slaveTimesOutTestP1() {
-		//fail();
+		try {
+			MockSocketeer mockSockets = new MockSocketeer();
+			mockSockets.timeout(true, true);
+			
+			TPCMaster testMaster = mockedSocketTPCMaster(mockSockets);
+			
+			KVMessage fakedPut = new KVMessage(KVConstants.PUT_REQ);
+			fakedPut.setKey("foo");
+			fakedPut.setValue("bar");
+			
+			testMaster.handleTPCRequest(fakedPut, true);
+			
+			KVMessage abortDecision = new KVMessage(KVConstants.ABORT);
+			String decisionXML = abortDecision.toXML();
+			String eavesdroppedDecisionXML = eavesdroppedDecision(mockSockets.getEavesdropper(2));
+			System.out.println(eavesdroppedDecisionXML);
+			assertTrue(decisionXML.equals(eavesdroppedDecisionXML));
+		} catch (KVException kve) {
+			fail();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
 	}
+	*/
 	
+	/*
+	 * Simulates a slave returning an abort vote by injecting mock sockets, 
+	 * with faked response messages and eavesdropping outputstreams
+	 */
 	@Test
 	public void slaveIndicatesFailureP1() {
 		
@@ -217,17 +250,6 @@ public class TPCMasterTest {
 			e.printStackTrace();
 			fail();
 		}
-		
-	}
-	
-	@Test
-	public void slaveTimesOutP2() {
-		//fail();
-	}
-	
-	@Test
-	public void slaveIndicatesFailureP2() {
-		//fail();
 	}
 	
 	/* From the spec;
@@ -236,7 +258,35 @@ public class TPCMasterTest {
 	 */
 	@Test
 	public void masterReceivesInvalidFormatP2() {
-		//fail();
+
+		try {
+			MockSocketeer mockSockets = new MockSocketeer();
+			Socket mockSocket = mock(Socket.class);
+			//Should not return ready in phase 2
+			when(mockSocket.getInputStream()).thenReturn(fakedResponseStream(KVConstants.READY));
+			mockSockets.setSocket(2, mockSocket);
+			
+			TPCMaster testMaster = mockedSocketTPCMaster(mockSockets);
+			//Test call - data should now be written to masterEavesdropper
+			KVMessage fakedPut = new KVMessage(KVConstants.PUT_REQ);
+			fakedPut.setKey("foo");
+			fakedPut.setValue("bar");
+			
+			testMaster.handleTPCRequest(fakedPut, true);
+			//Should not reach this point
+			fail();
+			
+		} catch (KVException kve) {
+			assertTrue(kve.getKVMessage().getMessage() == KVConstants.ERROR_INVALID_FORMAT);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
 	}
 	
 	//Essentially just a collection of the various (mocked) sockets used in handleTPCRequest
@@ -272,8 +322,23 @@ public class TPCMasterTest {
 			sockets.set(index, testSocket);
 		}
 		
-		public void timeout(boolean isReplica, boolean isPhase1) {
-			//implement me
+		public void timeout(boolean isReplica, boolean isPhase1) throws UnsupportedEncodingException, IOException, KVException, InterruptedException {
+			int index = isReplica ? 0 : 1;
+			index += isPhase1 ? 0 : 2;
+			Socket testSocket = mock(Socket.class);
+			when(testSocket.getInputStream()).thenReturn(delayStream(KVConstants.READY));
+			when(testSocket.getOutputStream()).thenReturn(outputStreams.get(index));
+			sockets.set(index, testSocket);
+		}
+		
+		public void setSocket(int index, Socket mockSock) throws IOException {
+			sockets.set(index, mockSock);
+			when(mockSock.getOutputStream()).thenReturn(outputStreams.get(index));
+		}
+		
+		private InputStream delayStream(String msg) throws UnsupportedEncodingException, KVException, InterruptedException {
+			Thread.sleep(TIMEDOUT);
+			return fakedResponseStream(msg);
 		}
 		
 		public Socket getSocket(int index) {
