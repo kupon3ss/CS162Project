@@ -6,13 +6,13 @@ import org.junit.*;
 
 public class TPCLogTest extends TPCEndToEndTemplate{
 	/**
-     * Sanity test that TPCLog can be rebuilt correctly.
+     * Sanity test that TPCLog can be rebuilt correctly. Don't forget to delete the log file is already exists.
      */
     @Test
-    public void rebuildTest() {
+    public void rebuildTest0() {
     	try {
     		KVServer server;
-    		TPCLog log = new TPCLog("rebuildTest", new KVServer(1, 4));
+    		TPCLog log = new TPCLog("bin/rebuildTest0", new KVServer(1, 4));
     		KVMessage request = new KVMessage(KVConstants.PUT_REQ);
     		KVMessage decision = new KVMessage(KVConstants.COMMIT);
     		request.setKey("foo");
@@ -32,9 +32,42 @@ public class TPCLogTest extends TPCEndToEndTemplate{
     		//System.out.println(server.toString());
     		assertEquals("world", server.get("hello"));
     		assertEquals("bar", server.get("foo"));
-    		
     	} catch (KVException kve) {
     		fail("Test should not fail");
+    	}
+    }
+    
+    /**
+     * Sanity test that TPCLog can be rebuilt correctly. Don't forget to delete the log file is already exists.
+     */
+    @Test
+    public void rebuildTest1() {
+    	try {
+    		KVServer server;
+    		TPCLog log = new TPCLog("bin/rebuildTest1", new KVServer(1, 4));
+    		KVMessage request = new KVMessage(KVConstants.PUT_REQ);
+    		KVMessage decision = new KVMessage(KVConstants.COMMIT);
+    		request.setKey("foo");
+    		request.setValue("bar");
+    		log.appendAndFlush(request);
+    		log.appendAndFlush(decision);
+    		request = new KVMessage(KVConstants.PUT_REQ);
+    		decision = new KVMessage(KVConstants.COMMIT);
+    		request.setKey("hello");
+    		request.setValue("world");
+    		log.appendAndFlush(request);
+    		//log.appendAndFlush(decision);
+
+    		
+    		log.rebuildServer();
+    		server = log.getServer();
+    		//System.out.println(server.toString());
+    		//assertEquals("world", server.get("hello"));
+    		assertEquals("bar", server.get("foo"));
+    		System.out.println(server.get("hello"));
+    		fail("test should fail");
+    	} catch (KVException kve) {
+    		assertEquals(KVConstants.ERROR_NO_SUCH_KEY, kve.getKVMessage().getMessage());
     	}
     }
     
@@ -47,7 +80,7 @@ public class TPCLogTest extends TPCEndToEndTemplate{
 	    	client.put("four", "4");
 	    	client.put("five", "5");
 	    	client.put("six", "6");
-	    	//client.put("seven", "7");
+	    	client.put("seven", "7");
 	    	client.del("six");
 	    	client.put("eight", "8");
     	} catch (KVException kve) {
@@ -64,8 +97,8 @@ public class TPCLogTest extends TPCEndToEndTemplate{
 	    	assertEquals(client.get("three"), "3");
 	    	assertEquals(client.get("four"), "4");
 	    	assertEquals(client.get("five"), "5");
-	    	//assertEquals(client.get("six"), "6");
-	    	//assertEquals(client.get("seven"), "7");
+	    	assertEquals(client.get("six"), "6");
+	    	assertEquals(client.get("seven"), "7");
 	    	assertEquals(client.get("eight"), "8");
 	    	client.get("six");
     	} catch (KVException kve) {
