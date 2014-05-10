@@ -42,12 +42,17 @@ public class TPCRegisterTest {
         
         startSlave(SLAVE1);
         startSlave(SLAVE2);
+        client.put(KEY3, "HI");
         startSlave(SLAVE3);
         startSlave(SLAVE4);
 
-        
+        //client.put(KEY3, "HI");
+        if (client.get(KEY3).equals("HI")) {
+        	System.out.println("PASS");
+        }
     }
 
+    
     @After
     public void tearDown() throws InterruptedException {
         masterClientRunner.stop();
