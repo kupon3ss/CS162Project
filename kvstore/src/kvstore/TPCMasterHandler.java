@@ -14,7 +14,8 @@ public class TPCMasterHandler implements NetworkHandler {
     private KVServer kvServer;
     private TPCLog tpcLog;
     private ThreadPool threadpool;
-    private int phase;
+
+    private boolean tpcOperationInProgress;
     
     private String masterHostname;
     private SocketServer ss;
@@ -44,6 +45,7 @@ public class TPCMasterHandler implements NetworkHandler {
         this.kvServer = kvServer;
         this.tpcLog = log;
         this.threadpool = new ThreadPool(connections);
+        this.tpcOperationInProgress = false;
     }
 
     /**
@@ -77,17 +79,10 @@ public class TPCMasterHandler implements NetworkHandler {
     	} finally {
     		try {
     			master.close();
-    		} catch (IOException ioe) {
+    		} catch (IOException|NullPointerException ioe) {
     			//Best effort to close
     		}
     	}
-    }
-
-    private void reRegister() {
-        try {
-            tpcLog.rebuildServer();
-            registerWithMaster(masterHostname, ss);
-        } catch (KVException kve) {}
     }
 
     /**
@@ -101,6 +96,62 @@ public class TPCMasterHandler implements NetworkHandler {
         Runnable r = new MasterHandler(master);
         threadpool.addJob(r);
     }
+
+    private KVMessage handleAbort(KVMessage request){
+		String lastMessageType = tpcLog.getLastEntry().getMsgType();
+		if (lastMessageType.equals(DEL_REQ) || lastMessageType.equals(PUT_REQ))
+	        tpcLog.appendAndFlush(request);
+        tpcOperationInProgress = false;
+		return new KVMessage(ACK);
+	}
+
+	private KVMessage handleCommit(KVMessage request) {
+        if (tpcOperationInProgress) {
+            KVMessage lastMessage = tpcLog.getLastEntry();
+            try {
+                if (lastMessage.getMsgType().equals(DEL_REQ)) {
+                    kvServer.del(lastMessage.getKey());
+                } else if (lastMessage.getMsgType().equals(PUT_REQ)) {
+                    kvServer.put(lastMessage.getKey(), lastMessage.getValue());
+                }
+            } catch (KVException kve) {
+                // ignore errors (these were already checked on master and ERROR_NO_SUCH_KEY checked for del in phase 1)
+            }
+            tpcLog.appendAndFlush(request);
+        }
+        // always send a response
+        tpcOperationInProgress = false;
+        return new KVMessage(ACK);
+	}
+
+	private KVMessage handlePutReq(KVMessage request) {
+        // phase-1 only
+        tpcLog.appendAndFlush(request);
+        tpcOperationInProgress = true;
+        return new KVMessage(READY);
+    }
+
+    private KVMessage handleDelReq(KVMessage request) {
+        String key = request.getKey();
+        // phase 1 only
+        if (!kvServer.hasKey(key)) // this check is only made in phase 1; thus we can ignore the exception in phase 2
+            return new KVMessage(ABORT, ERROR_NO_SUCH_KEY);
+        tpcLog.appendAndFlush(request);
+        tpcOperationInProgress = true;
+        return new KVMessage(READY);
+    }
+
+    private KVMessage handleGet(KVMessage request) {
+        String key = request.getKey();
+        KVMessage response = new KVMessage(RESP);
+		try {
+            response.setKey(key);
+			response.setValue(kvServer.get(key));
+		} catch (KVException e) {
+            response.setMessage(e.getMessage());
+        }
+        return response;
+	}
 
     /**
      * Runnable class containing routine to service a message from the master.
@@ -127,223 +178,36 @@ public class TPCMasterHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
-        	phase = 0;
-        	KVMessage message = null;
-        	KVMessage request = null;
-        	KVMessage response = null;
+        	KVMessage response;
         	try {
-        		request = new KVMessage(master);
+        		KVMessage request = new KVMessage(master);
                 switch (request.getMsgType()) {
                 	case GET_REQ:
-                		
                 		response = handleGet(request);
                 		break;
                 	case PUT_REQ:
-                		
-                		response = handlePut(request);
+                		response = handlePutReq(request);
                 		break;
-                		
                 	case DEL_REQ:
-                		
-                		response = handleDel(request);
+                		response = handleDelReq(request);
                 		break;
-                		
                     case COMMIT:
-                    	
                 		response = handleCommit(request);
                         break;
-                        
                     case ABORT:
-                    	
                 		response = handleAbort(request);
                     	break;
-                    
-                    default: // should never happen, but in case a client were to send some other message
-                        response = new KVMessage(RESP, ERROR_INVALID_REQUEST);
+                    default: // should never happen, but in case the master were to send some other message
+                        throw new KVException(ERROR_INVALID_REQUEST);
                 }
         	} catch (KVException kve) {
         		response = kve.getKVMessage();
         	}
-
     		try {
     			response.sendMessage(master);
     		} catch (KVException e) {
-                KVMessage ErrorResponse = e.getKVMessage();
-                try {
-					ErrorResponse.sendMessage(master);
-				} catch (KVException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-    		}
-        	
-        	
-        	
-        	tpcLog.appendAndFlush(message);
+				e.printStackTrace(); //best-effort response; can't do anything if we can't reach the master
+			}
         }
-
-		private KVMessage handleAbort(KVMessage request){
-			// TODO Auto-generated method stub
-			try {
-				KVMessage lastMessage = tpcLog.getLastEntry();
-				if (lastMessage.getMsgType() == DEL_REQ || lastMessage.getMsgType() == PUT_REQ){
-		            tpcLog.appendAndFlush(request);
-		            phase = 0;
-				}
-				KVMessage response = new KVMessage(ACK);
-				return response;
-				
-			} catch (KVException e) {
-                KVMessage ErrorResponse = e.getKVMessage();
-                return ErrorResponse;
-			}
-
-		}
-
-		private KVMessage handleCommit(KVMessage request) throws KVException {
-			// TODO Auto-generated method stub
-			// state2 is if commit was received but action has not made yet
-			if(phase == 1 || phase == 2){
-				phase = 2;
-				KVMessage lastMessage = tpcLog.getLastEntry();
-				if (lastMessage.getMsgType() == DEL_REQ){
-					handleDel(lastMessage);
-				}
-				else if (lastMessage.getMsgType() == PUT_REQ){
-					handlePut(lastMessage);
-				}				
-				tpcLog.appendAndFlush(request);
-			try {
-				KVMessage response = new KVMessage(ACK);
-				return response;
-			} catch (KVException e) {
-                KVMessage ErrorResponse = new KVMessage(ABORT);
-                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-                return ErrorResponse;
-			}
-			
-			}
-			
-			if(phase == 0){
-			try {
-				KVMessage response = new KVMessage(ACK);
-				return response;
-			} catch (KVException e) {
-                KVMessage ErrorResponse = new KVMessage(ABORT);
-                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-                return ErrorResponse;
-			}
-		}
-			//should never get here
-			return request;
-		}
-
-		private KVMessage handlePut(KVMessage request) {//throws KVException {
-			// TODO Auto-generated method stub
-			if(phase == 0){
-				try {
-					KVServer.checkKey(request.getKey());
-				} catch (KVException e) {
-					try {
-		                KVMessage ErrorResponse = new KVMessage(ABORT);
-		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-						return ErrorResponse;
-					} catch (KVException kve) {
-						//Best effort abort
-					}
-				}
-				tpcLog.appendAndFlush(request);
-				phase ++;
-				try {
-					KVMessage response = new KVMessage(READY);
-					return response;
-				} catch (KVException e) {
-					try {
-		                KVMessage ErrorResponse = new KVMessage(ABORT);
-		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-						return ErrorResponse;
-					} catch (KVException kve) {
-						//Best effort abort
-					}
-				}
-			}
-			
-			else if (phase == 2){
-		        try {
-		        	KVServer.checkKey(request.getKey());
-		            kvServer.put(request.getKey(), request.getValue());
-		            phase = 0;
-		            KVMessage response = new KVMessage(ACK);
-		            return response;
-		        } catch (KVException e) {
-		        	try {
-		                KVMessage ErrorResponse = new KVMessage(ABORT);
-		                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-						return ErrorResponse;
-					} catch (KVException kve) {
-						//Best effort abort
-					}
-				}      	
-		    }
-			//should never get here
-			return request;
-		}
-
-		private KVMessage handleGet(KVMessage request) {
-			if (kvServer.hasKey(request.getKey())){
-				try {
-					KVServer.checkKey(request.getKey());
-					KVMessage response = new KVMessage(RESP);
-					response.setKey(request.getKey());
-					response.setValue(kvServer.get(request.getKey()));
-					return response;
-				} catch (KVException e) {
-	                KVMessage ErrorResponse = e.getKVMessage();
-	                return ErrorResponse;
-				}
-			}
-			else {
-				KVMessage response = new KVMessage(RESP, ERROR_NO_SUCH_KEY);
-				return response;
-            }
-		}
-			
-
-		private KVMessage handleDel(KVMessage request) throws KVException {
-			// TODO Auto-generated method stub
-			if(phase == 0){
-				KVServer.checkKey(request.getKey());
-				tpcLog.appendAndFlush(request);
-				phase ++;
-				try {
-					KVMessage response = new KVMessage(READY);
-					return response;
-				} catch (KVException e) {
-	                KVMessage ErrorResponse = new KVMessage(ABORT);
-	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-					return ErrorResponse;
-				}
-
-			}
-			
-			else if (phase == 2){
-		        try {
-		        	KVServer.checkKey(request.getKey());
-		            kvServer.del(request.getKey());
-		            phase = 0;
-		            KVMessage response = new KVMessage(ACK);
-		            return response;
-		        } catch (KVException e) {
-	                KVMessage ErrorResponse = new KVMessage(ABORT);
-	                ErrorResponse.setMessage(e.getKVMessage().getMessage());
-						return ErrorResponse;
-		            }
-			}
-			//should never get here;
-			return request;
-
-			
-		}
-
     }
 }

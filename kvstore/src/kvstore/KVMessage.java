@@ -48,15 +48,11 @@ public class KVMessage implements Serializable {
      * Construct KVMessage with only a type.
      *
      * @param msgType the type of this KVMessage
-     * @throws KVException 
      */
-    public KVMessage(String msgType) throws KVException {
-        if (!msgTypes.contains(msgType)){
-        	throw new KVException(ERROR_INVALID_FORMAT);
-        }
-        else {
-        	this.msgType = msgType;
-        }
+    public KVMessage(String msgType) {
+        if (!msgTypes.contains(msgType))
+        	throw new AssertionError(ERROR_INVALID_FORMAT);
+        this.msgType = msgType;
     }
 
     /**
@@ -112,285 +108,163 @@ public class KVMessage implements Serializable {
 		} catch (NullPointerException e){
 			throw new KVException(ERROR_COULD_NOT_CREATE_SOCKET);
 		}
-    	
+
 		Element root = document.getDocumentElement();
-		NodeList elements = root.getChildNodes();
+        this.msgType = root.getAttribute("type");
+        NodeList elements = root.getChildNodes();
+        Node element;
+        String elementtype;
 
-		
-		if (!msgTypes.contains(root.getAttribute("type"))){
-			throw new KVException(ERROR_INVALID_FORMAT);
-    	}
-        else if (root.getAttribute("type").equals(PUT_REQ)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
+        switch(this.msgType) {
+            case PUT_REQ:
+                for (int i = 0; i < elements.getLength(); ++i) {
+    			    element = elements.item(i);
+    			    elementtype = element.getNodeName();
+    			    //check that its an acceptable field
+    			    if (!eleTypes.contains(elementtype))
+    				    throw new KVException(ERROR_INVALID_FORMAT);
+                    if (elementtype.equals("Key"))
+                	    this.key = element.getTextContent();
+                    else if (elementtype.equals("Value"))
+                	    this.value = element.getTextContent();
+                    else if (elementtype.equals("Message"))
+        			    throw new KVException(ERROR_INVALID_FORMAT);
+    		    }
+    		    if (this.key == null || this.key.equals("") || this.value == null || this.value.equals(""))
+    			    throw new KVException(ERROR_INVALID_FORMAT);
+                break;
 
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Key")) {
-                	this.key = element.getTextContent();
+            case GET_REQ:
+                for (int i = 0; i < elements.getLength(); ++i) {
+    			    element = elements.item(i);
+    			    elementtype = element.getNodeName();
+
+    			    //check that its an acceptable field
+    			    if (!eleTypes.contains(elementtype))
+    				    throw new KVException(ERROR_INVALID_FORMAT);
+                    if (elementtype.equals("Key"))
+                	    this.key = element.getTextContent();
+                    else if (elementtype.equals("Value")||elementtype.equals("Message"))
+        			    throw new KVException(ERROR_INVALID_FORMAT);
+    		    }
+    		    if (this.key == null || this.key.equals(""))
+				    throw new KVException(ERROR_INVALID_FORMAT);
+                break;
+
+            case DEL_REQ:
+                for (int i = 0; i < elements.getLength(); ++i) {
+                    element = elements.item(i);
+                    elementtype = element.getNodeName();
+                    //check that its an acceptable field
+                    if (!eleTypes.contains(elementtype))
+                        throw new KVException(ERROR_INVALID_FORMAT);
+                    if (elementtype.equals("Key"))
+                        this.key = element.getTextContent();
+                    else if (elementtype.equals("Value")||elementtype.equals("Message"))
+                        throw new KVException(ERROR_INVALID_FORMAT);
                 }
-                else if (elementtype.equals("Value")) {
-                	this.value = element.getTextContent();
+                if (this.key == null || this.key.equals(""))
+                    throw new KVException(ERROR_INVALID_FORMAT);
+                break;
+            // need a check and bulletproofing here
+
+            case RESP:
+                for (int i = 0; i < elements.getLength(); ++i) {
+                    element = elements.item(i);
+                    elementtype = element.getNodeName();
+                    //check that its an acceptable field
+                    if (!eleTypes.contains(elementtype))
+                        throw new KVException(ERROR_INVALID_FORMAT);
+                    if (elementtype.equals("Key"))
+                        this.key = element.getTextContent();
+                    else if (elementtype.equals("Value"))
+                        this.value = element.getTextContent();
+                    else if (elementtype.equals("Message"))
+                        this.message = element.getTextContent();
+                    //System.out.println(elementtype);
                 }
-                else if (elementtype.equals("Message")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
+                if (this.message != null){
+                    if (this.key != null || this.value != null){
+                        throw new KVException(ERROR_INVALID_FORMAT);
+                    }
                 }
-    		}
-    		if (this.key == null || this.key.equals("") || this.value == null || this.value.equals("")){
-    			throw new KVException(ERROR_INVALID_FORMAT);
-    	    }
-    	}
-    	else if (root.getAttribute("type").equals(GET_REQ)){
-    		this.msgType = root.getAttribute("type");
+                else if (this.key == null || this.value == null){
+                    throw new KVException(ERROR_INVALID_FORMAT);
+                }
+                break;
+
+            case REGISTER:
+                for (int i = 0; i < elements.getLength(); ++i) {
+                    element = elements.item(i);
+                    elementtype = element.getNodeName();
+                    //check that its an acceptable field
+                    if (!eleTypes.contains(elementtype))
+                        throw new KVException(ERROR_INVALID_FORMAT);
+                    if (elementtype.equals("Message"))
+                        this.message = element.getTextContent();
+                    else if (elementtype.equals("Value")||elementtype.equals("Key"))
+                        throw new KVException(ERROR_INVALID_FORMAT);
+                }
+                if (this.key != null || this.value != null)
+                    throw new KVException(ERROR_INVALID_FORMAT);
+                break;
+
+            case READY:
+                handleTPCMsgType(elements);
+                break;
+
+            case ABORT:
+                handleTPCMsgType(elements);
+                break;
+
+            case COMMIT:
+                handleTPCMsgType(elements);
+                break;
+
+            case ACK:
+                handleTPCMsgType(elements);
+                break;
+
+            default: // if the message type is invalid
+                throw new KVException(ERROR_INVALID_FORMAT);
+        }
+    }
+
+    // should only be called for ABORT, COMMIT, READY, and ACK
+    private void handleTPCMsgType(NodeList elements) throws KVException {
+        Node element;
+        String elementtype;
+
+        if (msgType.equals(ABORT)) {
     		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
+    			element = elements.item(i);
+    			elementtype = element.getNodeName();
     			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
+    			if (!eleTypes.contains(elementtype))
     				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Key")) {
-                	this.key = element.getTextContent();
-                }
-                else if (elementtype.equals("Value")||elementtype.equals("Message")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key == null || this.key.equals("")){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-    	else if (root.getAttribute("type").equals(DEL_REQ)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Key")) {
-                	this.key = element.getTextContent();
-                }
-                else if (elementtype.equals("Value")||elementtype.equals("Message")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key == null || this.key.equals("")){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-    	// need a check and bulletproofing here
-   
-    	else if (root.getAttribute("type").equals(RESP)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Key")) {
-                	this.key = element.getTextContent();
-                } 
-                else if (elementtype.equals("Value")) {
-                	this.value = element.getTextContent();
-                }
-                else if (elementtype.equals("Message")) {
+                if (elementtype.equals("Message"))
                 	this.message = element.getTextContent();
-                }
-                //System.out.println(elementtype);
+                else if (elementtype.equals("Value")||elementtype.equals("Key"))
+        			throw new KVException(ERROR_INVALID_FORMAT);
     		}
-    		if (this.message != null){
-    			if (this.key != null || this.value != null){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    			}
-    		}
-    		else if (this.key == null || this.value == null){ 
+    		if (this.key != null || this.value != null)
 				throw new KVException(ERROR_INVALID_FORMAT);
 
-    		}
-    	}
-		
-    	else if (root.getAttribute("type").equals(REGISTER)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Message")) {
-                	this.message = element.getTextContent();
-                }
-                else if (elementtype.equals("Value")||elementtype.equals("Key")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key != null || this.value != null){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-		
-    	else if (root.getAttribute("type").equals(REGISTER)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-   
-    			if (elementtype.equals("Value")||elementtype.equals("Key")||elementtype.equals("Message")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key != null || this.value != null || this.message != null){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-		
-    	else if (root.getAttribute("type").equals(COMMIT) || root.getAttribute("type").equals(READY) || root.getAttribute("type").equals(ACK)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-   
-    			if (elementtype.equals("Value")||elementtype.equals("Key")||elementtype.equals("Message")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key != null || this.value != null || this.message != null){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-		
-    	else if (root.getAttribute("type").equals(ABORT)){
-    		this.msgType = root.getAttribute("type");
-    		for (int i = 0; i < elements.getLength(); ++i) {
-    			Node element = elements.item(i);
-    			String elementtype = element.getNodeName();
-    			
-    			//check that its an acceptable field
-    			if (!eleTypes.contains(elementtype)){
-    				throw new KVException(ERROR_INVALID_FORMAT);
-    	    	}
-    			
-                if (elementtype.equals("Message")) {
-                	this.message = element.getTextContent();
-                }
-                else if (elementtype.equals("Value")||elementtype.equals("Key")){
-        			throw new KVException(ERROR_INVALID_FORMAT);
-                }
-    		}
-    		if (this.key != null || this.value != null){
-				throw new KVException(ERROR_INVALID_FORMAT);
-			}
-    	}
-		
-		
-    	
-    	
-		
-    	
+        } else { // COMMIT, READY, and ACK
+            for (int i = 0; i < elements.getLength(); ++i) {
+                element = elements.item(i);
+                elementtype = element.getNodeName();
+                //check that its an acceptable field
+                if (!eleTypes.contains(elementtype))
+                    throw new KVException(ERROR_INVALID_FORMAT);
+                if (elementtype.equals("Value")||elementtype.equals("Key")||elementtype.equals("Message"))
+                    throw new KVException(ERROR_INVALID_FORMAT);
+            }
+            if (this.key != null || this.value != null || this.message != null)
+                throw new KVException(ERROR_INVALID_FORMAT);
+        }
     }
     
- /*  Probably dont need this, can be used in KVServer  
-  * 
-    public void formatCheck() throws KVException{
-    	if (msgTypes.contains(this.msgType)){
-    		throw new KVException (ERROR_INVALID_FORMAT);
-    	}
-    	if (this.msgType.equals(PUT_REQ)){
-    		if (this.key != null){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if (this.key.isEmpty()){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if ((this.key.length() > 256)){
-    			throw new KVException (ERROR_OVERSIZED_KEY);
-    		}
-    		if (this.value != null){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if (this.value.isEmpty()){
-    			throw new KVException (ERROR_INVALID_VALUE);
-    		}
-    		if (this.value.length() > 1024*256){
-    			throw new KVException (ERROR_OVERSIZED_VALUE);
-    		}
-    	}
-    	if (this.msgType.equals(GET_REQ)){
-    		if (this.key != null){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if (this.key.isEmpty()){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if ((this.key.length() > 256)){
-    			throw new KVException (ERROR_OVERSIZED_KEY);
-    		}
-    	}
-    	if (this.msgType.equals(DEL_REQ)){
-    		if (this.key != null){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if (this.key.isEmpty()){
-    			throw new KVException (ERROR_INVALID_KEY);
-    		}
-    		if ((this.key.length() > 256)){
-    			throw new KVException (ERROR_OVERSIZED_KEY);
-    		}
-    	}
-    	if (this.msgType.equals(RESP)){
-    		
-    	}
-    }
-    
-    */
-
-    
-    /*
-     *    	
-     *  if (!msgTypes.contains(this.msgType)){
-    		return false;
-    	}
-    	if (this.msgType.equals(GET_REQ)){
-    		
-    	}
-    	if (this.msgType.equals(PUT_REQ)){
-    		
-    	}
-    	if (this.msgType.equals(DEL_REQ)){
-    		
-    	}
-    	if (this.msgType.equals(RESP)){
-    		
-    	} 
-     */
     /**
      * Generate the serialized XML representation for this message. See
      * the spec for details on the expected output format.
@@ -424,7 +298,7 @@ public class KVMessage implements Serializable {
 	    	Element xmlkey = xmldoc.createElement("Key");
 			xmlkey.appendChild(xmldoc.createTextNode(this.key));
 			Element xmlval = xmldoc.createElement("Value");
-			xmlval.appendChild(xmldoc.createTextNode(this.value));	
+			xmlval.appendChild(xmldoc.createTextNode(this.value));
 			xmlroot.appendChild(xmlkey);
 			xmlroot.appendChild(xmlval);
 	    }
@@ -447,24 +321,24 @@ public class KVMessage implements Serializable {
 	    	}
 	    	if (this.value != null && !this.value.isEmpty()) {
 				Element xmlval = xmldoc.createElement("Value");
-				xmlval.appendChild(xmldoc.createTextNode(this.value));	
+				xmlval.appendChild(xmldoc.createTextNode(this.value));
 				xmlroot.appendChild(xmlval);
 	    	}
 	    	if (this.message != null && !this.message.isEmpty()) {
 				Element xmlmsg = xmldoc.createElement("Message");
-				xmlmsg.appendChild(xmldoc.createTextNode(this.message));	
+				xmlmsg.appendChild(xmldoc.createTextNode(this.message));
 				xmlroot.appendChild(xmlmsg);
 	    	}
 	    }
-	    
+
 	    else if (this.msgType.equals(REGISTER) || this.msgType.equals(ABORT)){
 	    	if (this.message != null && !this.message.isEmpty()) {
 				Element xmlmsg = xmldoc.createElement("Message");
-				xmlmsg.appendChild(xmldoc.createTextNode(this.message));	
+				xmlmsg.appendChild(xmldoc.createTextNode(this.message));
 				xmlroot.appendChild(xmlmsg);
 	    	}
 	    }
-	    
+
 	    else if (this.msgType.equals(READY) || this.msgType.equals(ABORT) || this.msgType.equals(COMMIT) || this.msgType.equals(ACK)){
 	    //dont need to do anything here
 	    }
