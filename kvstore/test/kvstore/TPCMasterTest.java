@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import org.junit.*;
 
@@ -22,7 +23,7 @@ public class TPCMasterTest {
 	 * @param mockSocket
 	 * @return a modified TPCMaster
 	 */
-	private TPCMaster mockedSocketTPCMaster(final Socket mockSocket) {
+	private TPCMaster mockedSocketTPCMaster(final MockSocketeer mockSocketeer) {
 		
 		//Return a tpcMaster that has been modified to use partially mocked TPCSlaveInfo, that themselves return mocked sockets of our choosing
 		TPCMaster tpcMaster = new TPCMaster(2, new KVCache(1, 4)) {
@@ -31,7 +32,8 @@ public class TPCMasterTest {
 			public TPCSlaveInfo findFirstReplica(String s) {
 				TPCSlaveInfo mockSlaveInfo = mock(TPCSlaveInfo.class);
 				try {
-					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocket);
+					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocketeer.getSocket(0))
+															.thenReturn(mockSocketeer.getSocket(2));
 				} catch (KVException kve) {
 					kve.printStackTrace();
 				}
@@ -42,7 +44,8 @@ public class TPCMasterTest {
 			public TPCSlaveInfo findSuccessor(TPCSlaveInfo t) {
 				TPCSlaveInfo mockSlaveInfo = mock(TPCSlaveInfo.class);
 				try {
-					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocket);
+					when(mockSlaveInfo.connectHost(TIMEOUT)).thenReturn(mockSocketeer.getSocket(1))
+															.thenReturn(mockSocketeer.getSocket(3));
 				} catch (KVException kve) {
 					kve.printStackTrace();
 				}
@@ -177,23 +180,17 @@ public class TPCMasterTest {
 	
 	@Test
 	public void slaveTimesOutTestP1() {
-		fail();
+		//fail();
 	}
 	
 	@Test
 	public void slaveIndicatesFailureP1() {
 		
-		Socket mockSocket = mock(Socket.class);
-		ByteArrayOutputStream masterEavesdropper = new ByteArrayOutputStream();
 		try {
-			when(mockSocket.getInputStream()).thenReturn(fakedResponseStream(KVConstants.ABORT));
-			when(mockSocket.getOutputStream()).thenReturn(masterEavesdropper);
-		} catch (IOException | KVException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		TPCMaster testMaster = mockedSocketTPCMaster(mockSocket);
-		try {
+			MockSocketeer mockSockets = new MockSocketeer(); 
+			mockSockets.abortVote(true);
+			
+			TPCMaster testMaster = mockedSocketTPCMaster(mockSockets);
 			//Test call - data should now be written to masterEavesdropper
 			KVMessage fakedPut = new KVMessage(KVConstants.PUT_REQ);
 			fakedPut.setKey("foo");
@@ -204,9 +201,7 @@ public class TPCMasterTest {
 			//Abort decision to compare against
 			KVMessage abortDecision = new KVMessage(KVConstants.ABORT);
 			String decisionXML = abortDecision.toXML();
-			System.out.println(decisionXML);
-			String eavesdroppedDecisionXML = eavesdroppedDecision(masterEavesdropper);
-			System.out.println(eavesdroppedDecisionXML);
+			String eavesdroppedDecisionXML = eavesdroppedDecision(mockSockets.getEavesdropper(2));
 			assertTrue(decisionXML.equals(eavesdroppedDecisionXML));
 			
 		} catch (KVException kve) {
@@ -217,18 +212,22 @@ public class TPCMasterTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			fail();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
 		}
 		
 	}
 	
 	@Test
 	public void slaveTimesOutP2() {
-		fail();
+		//fail();
 	}
 	
 	@Test
 	public void slaveIndicatesFailureP2() {
-		fail();
+		//fail();
 	}
 	
 	/* From the spec;
@@ -237,7 +236,53 @@ public class TPCMasterTest {
 	 */
 	@Test
 	public void masterReceivesInvalidFormatP2() {
-		fail();
+		//fail();
+	}
+	
+	//Essentially just a collection of the various (mocked) sockets used in handleTPCRequest
+	private class MockSocketeer {
+		
+		private ArrayList<Socket> sockets;
+		private ArrayList<ByteArrayOutputStream> outputStreams;	
+		
+		public MockSocketeer () throws IOException, KVException{
+			//Instantiate mocked sockets and their respective output streams
+			sockets = new ArrayList<Socket>(4);
+			outputStreams = new ArrayList<ByteArrayOutputStream>(4);
+			for(int i = 0; i < 4; i++) {
+				Socket socket = mock(Socket.class);
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				sockets.add(i, socket);
+				outputStreams.add(i, stream);
+				when(socket.getOutputStream()).thenReturn(outputStreams.get(i));
+			}
+			//Instantiate a successful response series;
+			when(sockets.get(0).getInputStream()).thenReturn(fakedResponseStream(KVConstants.READY)); //Replica P1
+			when(sockets.get(1).getInputStream()).thenReturn(fakedResponseStream(KVConstants.READY)); //Successor P1
+			when(sockets.get(2).getInputStream()).thenReturn(fakedResponseStream(KVConstants.ACK)); //Replica P2
+			when(sockets.get(3).getInputStream()).thenReturn(fakedResponseStream(KVConstants.ACK)); //Successor P2
+		}
+		
+		public void abortVote(boolean isReplica) throws UnsupportedEncodingException, IOException, KVException {
+			//Overwrite either the replica or the successor with an abort socket
+			int index = isReplica ? 0 : 1;
+			Socket testSocket = mock(Socket.class);
+			when(testSocket.getInputStream()).thenReturn(fakedResponseStream(KVConstants.ABORT));
+			when(testSocket.getOutputStream()).thenReturn(outputStreams.get(index));
+			sockets.set(index, testSocket);
+		}
+		
+		public void timeout(boolean isReplica, boolean isPhase1) {
+			//implement me
+		}
+		
+		public Socket getSocket(int index) {
+			return sockets.get(index);
+		}
+		
+		public ByteArrayOutputStream getEavesdropper(int index) {
+			return outputStreams.get(index);
+		}
 	}
 	
 	//thenCallRealMethod()
