@@ -53,6 +53,7 @@ public class TPCEndToEndTest extends TPCEndToEndTemplate {
     
     @Test
     public void fuzzTest() throws KVException {
+    	try {
         Random rand = new Random(8); // no reason for 8
         Map<String, String> map = new HashMap<String, String>(4);
         String key, val;
@@ -71,5 +72,8 @@ public class TPCEndToEndTest extends TPCEndToEndTemplate {
         }
         assertTrue(map.size() == 0);
         System.out.println("YAYPASSFUZZTEST");
+    	} catch (KVException kve) {
+    		System.out.println(kve.getKVMessage().getMessage());
+    	}
     }
 }

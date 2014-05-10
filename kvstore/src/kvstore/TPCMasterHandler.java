@@ -142,7 +142,7 @@ public class TPCMasterHandler implements NetworkHandler {
             response.setKey(key);
 			response.setValue(kvServer.get(key));
 		} catch (KVException e) {
-            response.setMessage(e.getMessage());
+            response = new KVMessage(RESP, e.getMessage());
         }
         return response;
 	}

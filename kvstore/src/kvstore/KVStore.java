@@ -73,8 +73,8 @@ public class KVStore implements KeyValueInterface {
     public String get(String key) throws KVException {
         String retVal = this.store.get(key);
         if (retVal == null) {
-            KVMessage msg = new KVMessage(ERROR_NO_SUCH_KEY);
-            throw new KVException(msg);
+            //KVMessage msg = new KVMessage(ERROR_NO_SUCH_KEY);
+            throw new KVException(new KVMessage(RESP, ERROR_NO_SUCH_KEY));
         }
         return retVal;
     }
@@ -89,8 +89,8 @@ public class KVStore implements KeyValueInterface {
     public void del(String key) throws KVException {
         if(key != null) {
             if (!this.store.containsKey(key)) {
-                KVMessage msg = new KVMessage(ERROR_NO_SUCH_KEY);
-                throw new KVException(msg);
+                //KVMessage msg = new KVMessage(ERROR_NO_SUCH_KEY);
+                throw new KVException(new KVMessage(RESP, ERROR_NO_SUCH_KEY));
             }
             this.store.remove(key);
         }
