@@ -51,4 +51,25 @@ public class TPCEndToEndTest extends TPCEndToEndTemplate {
     	}
     }
     
+    @Test
+    public void fuzzTest() throws KVException {
+        Random rand = new Random(8); // no reason for 8
+        Map<String, String> map = new HashMap<String, String>(4);
+        String key, val;
+        for (int i = 0; i < 4; i++) {
+            key = Integer.toString(rand.nextInt());
+            val = Integer.toString(rand.nextInt());
+            client.put(key, val);
+            map.put(key, val);
+        }
+        Iterator<Map.Entry<String, String>> mapIter = map.entrySet().iterator();
+        Map.Entry<String, String> pair;
+        while(mapIter.hasNext()) {
+            pair = mapIter.next();
+            if (!client.get(pair.getKey()).equals(pair.getValue())) {System.out.println("failed fuzz Test"); return;}
+            mapIter.remove();
+        }
+        assertTrue(map.size() == 0);
+        System.out.println("YAYPASSFUZZTEST");
+    }
 }
