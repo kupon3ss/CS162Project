@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.*;
 
 public class TPCMaster {
 
@@ -65,7 +66,10 @@ public class TPCMaster {
 	    		}
 	    	}
     	}
-        if (ready()) this.notifyAll();
+    	
+    	synchronized (this) {
+    		if (ready()) {this.notifyAll();}
+    	}
     }
 
     public boolean ready() {

@@ -31,7 +31,7 @@ public class TPCRegisterTest {
     static final String KEY3 = "0000000000000000000"; //-7869206253219942869
     static final String KEY4 = "3333333333333333333"; //-2511215889438427442
 
-    @Test
+    @Test (timeout = 15000)
     public void setUp() throws Exception {
         hostname = InetAddress.getLocalHost().getHostAddress();
 
@@ -42,11 +42,21 @@ public class TPCRegisterTest {
         
         startSlave(SLAVE1);
         startSlave(SLAVE2);
-        client.put(KEY3, "HI");
+        
+        (new Thread() {
+        	public void run() {
+        		try {
+        			client.put(KEY3, "HI");
+        		} catch (KVException e) {
+        			
+        		}
+        	}
+        }).start();
+        
         startSlave(SLAVE3);
         startSlave(SLAVE4);
 
-        //client.put(KEY3, "HI");
+        System.out.println(client.get(KEY3));
         if (client.get(KEY3).equals("HI")) {
         	System.out.println("PASS");
         }

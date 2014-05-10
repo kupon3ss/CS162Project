@@ -71,13 +71,15 @@ public class TPCClientHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
-            while (!tpcMaster.ready()) {
-                try {
-                    tpcMaster.wait();
-                } catch (InterruptedException ie) {
-                    // ignore and try waiting
-                }
-            }
+        	synchronized(tpcMaster) {
+	        	while (!tpcMaster.ready()) {
+		            try {
+		            	tpcMaster.wait();
+		            } catch (InterruptedException ie) {
+		            	
+		            }
+		        }
+        	}
         	KVMessage response;
         	try {
         		KVMessage request = new KVMessage(client);
