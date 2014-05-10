@@ -339,17 +339,15 @@ public class KVMessage implements Serializable {
 	    	}
 	    }
 
-	    else if (this.msgType.equals(READY) || this.msgType.equals(ABORT) || this.msgType.equals(COMMIT) || this.msgType.equals(ACK)){
+	    /*else if (this.msgType.equals(READY) || this.msgType.equals(ABORT) || this.msgType.equals(COMMIT) || this.msgType.equals(ACK)){
 	    //dont need to do anything here
-	    }
-	    
-	    
+	    }*/
+
 	    Transformer transformer = null;
 	    TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		try {
 			transformer = transformerFactory.newTransformer();
 		} catch (TransformerConfigurationException e) {
-			
 		}
 		
 		StringWriter xmlwriter = new StringWriter();
@@ -443,6 +441,5 @@ public class KVMessage implements Serializable {
         @Override
         public void close() {} // ignore close
     }
-
 
 }

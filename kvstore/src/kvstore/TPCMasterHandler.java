@@ -17,9 +17,6 @@ public class TPCMasterHandler implements NetworkHandler {
 
     private boolean tpcOperationInProgress;
     
-    private String masterHostname;
-    private SocketServer ss;
-
     /**
      * Constructs a TPCMasterHandler with one connection in its ThreadPool
      *
@@ -60,10 +57,7 @@ public class TPCMasterHandler implements NetworkHandler {
      *         as those expected in KVClient in project 3 if unable to receive
      *         and/or parse message
      */
-    public void registerWithMaster(String masterHostname, SocketServer server)
-            throws KVException {
-    	this.masterHostname = masterHostname;
-    	this.ss = server;
+    public void registerWithMaster(String masterHostname, SocketServer server) throws KVException {
     	Socket master = null;
     	try {
 	        KVMessage registerSlave = new KVMessage(REGISTER, slaveID+"@"+server.getHostname()+":"+server.getPort());
@@ -178,31 +172,31 @@ public class TPCMasterHandler implements NetworkHandler {
         @Override
         public void run() {
             // implement me
-        	KVMessage response;
+        	KVMessage response, request;
         	try {
-        		KVMessage request = new KVMessage(master);
-                switch (request.getMsgType()) {
-                	case GET_REQ:
-                		response = handleGet(request);
-                		break;
-                	case PUT_REQ:
-                		response = handlePutReq(request);
-                		break;
-                	case DEL_REQ:
-                		response = handleDelReq(request);
-                		break;
-                    case COMMIT:
-                		response = handleCommit(request);
-                        break;
-                    case ABORT:
-                		response = handleAbort(request);
-                    	break;
-                    default: // should never happen, but in case the master were to send some other message
-                        throw new KVException(ERROR_INVALID_REQUEST);
-                }
-        	} catch (KVException kve) {
-        		response = kve.getKVMessage();
-        	}
+                request = new KVMessage(master);
+            } catch (KVException kve) {
+                return;
+            }
+            switch (request.getMsgType()) {
+                case GET_REQ:
+                    response = handleGet(request);
+                    break;
+                case PUT_REQ:
+                    response = handlePutReq(request);
+                    break;
+                case DEL_REQ:
+                    response = handleDelReq(request);
+                    break;
+                case COMMIT:
+                    response = handleCommit(request);
+                    break;
+                case ABORT:
+                    response = handleAbort(request);
+                    break;
+                default: // should never happen, but in case the master were to send some other messag
+                    return;
+            }
     		try {
     			response.sendMessage(master);
     		} catch (KVException e) {
