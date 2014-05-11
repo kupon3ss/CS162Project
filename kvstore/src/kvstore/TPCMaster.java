@@ -192,18 +192,19 @@ public class TPCMaster {
         TPCSlaveInfo secondSlave = findSuccessor(firstSlave);
         Socket firstSocket = null, secondSocket = null;
         try {
+            // phase-1
             firstSocket = firstSlave.connectHost(TIMEOUT);
             secondSocket = secondSlave.connectHost(TIMEOUT);
-
-            // phase-1
             String firstResponse = doTPCPhase1(msg, firstSocket);
             String secondResponse = doTPCPhase1(msg, secondSocket);
             boolean ready = firstResponse.equals(READY) && secondResponse.equals(READY); // handle case where can't send to either slave.
+            firstSlave.closeHost(firstSocket);
+            secondSlave.closeHost(secondSocket);
 
             // phase-2
             firstSocket = firstSlave.connectHost(TIMEOUT);
             secondSocket = secondSlave.connectHost(TIMEOUT);
-            String value = msg.getValue();
+            String value = msg.getValue(); // save the value of the request to put to master cache
             msg = new KVMessage(ready ? COMMIT : ABORT);
             doTPCPhase2(msg, firstSocket);
             doTPCPhase2(msg, secondSocket); // handle case where
@@ -214,14 +215,16 @@ public class TPCMaster {
 
         } finally {
             setLock.unlock();
-            if (firstSocket != null) firstSlave.closeHost(firstSocket);
-            if (secondSocket != null) secondSlave.closeHost(secondSocket);
+            if (firstSocket != null && !firstSocket.isClosed())
+                firstSlave.closeHost(firstSocket);
+            if (secondSocket != null && !secondSocket.isClosed())
+                secondSlave.closeHost(secondSocket);
         }
     }
 
     private String doTPCPhase1(KVMessage msg, Socket slaveSocket) throws KVException {
-        msg.sendMessage(slaveSocket);
         try {
+            msg.sendMessage(slaveSocket);
             msg = new KVMessage(slaveSocket, TIMEOUT);
             return msg.getMsgType();
         } catch (KVException kve) { //timeout or other error
@@ -232,8 +235,8 @@ public class TPCMaster {
     private void doTPCPhase2(KVMessage msg, Socket slaveSocket) throws KVException {
         boolean sent = false;
         while (!sent) {
-            msg.sendMessage(slaveSocket);
             try {
+                msg.sendMessage(slaveSocket);
                 msg = new KVMessage(slaveSocket, TIMEOUT);
                 sent = true;
             } catch (KVException kve) {
